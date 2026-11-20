@@ -27,6 +27,7 @@ impl Platform for WindowsPlatform {
             // Elevated or protected processes may refuse to be queried.
             app: process_name(hwnd).unwrap_or_else(|| "unknown".to_string()),
             title: window_title(hwnd),
+            url: None,
         })
     }
 

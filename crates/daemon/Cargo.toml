@@ -9,6 +9,7 @@ repository.workspace = true
 [dependencies]
 zman-core.workspace = true
 ctrlc = "3.5"
+serde_json.workspace = true
 
 [target.'cfg(windows)'.dependencies]
 windows-sys = { version = "0.61", features = [

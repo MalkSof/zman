@@ -1,5 +1,6 @@
 //! The tracking loop, shared by the `zman-daemon` binary and the desktop app.
 
+pub mod browser;
 pub mod platform;
 
 use std::fmt;
@@ -56,13 +57,28 @@ pub fn run(paths: &Paths, config: Config, control: &Control, on_ready: impl FnOn
 
     let platform = platform::current().map_err(other)?;
     let poll_interval = Duration::from_secs(config.poll_interval_secs);
+    // The browser extension is optional: if the port is taken, tracking
+    // simply goes on without URLs.
+    let active_tab = match config.browser.port {
+        0 => None,
+        port => match browser::listen(port, config.browser.full_urls) {
+            Ok(active) => Some(active),
+            Err(e) => {
+                eprintln!("zman: browser extension support is off (port {port}: {e})");
+                None
+            }
+        },
+    };
     let store = Store::open(&paths.db_file).map_err(other)?;
     let mut tracker = Tracker::new(store, config).map_err(other)?;
     on_ready();
 
     while !control.stop.load(Ordering::SeqCst) {
         if !control.paused.load(Ordering::SeqCst) {
-            let window = platform.active_window();
+            let mut window = platform.active_window();
+            if let (Some(window), Some(active_tab)) = (window.as_mut(), active_tab.as_ref()) {
+                active_tab.annotate(window);
+            }
             let idle_ms = platform.idle_time().as_millis() as i64;
             if let Err(e) = tracker.tick(now_ms(), window, idle_ms) {
                 // A failed write loses one sample; keep tracking.

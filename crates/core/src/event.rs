@@ -48,6 +48,28 @@ pub fn domain_of(url: &str) -> Option<String> {
     if host.is_empty() { None } else { Some(host.to_string()) }
 }
 
+/// Reduces a page URL to what zman is willing to store: http(s) only, no
+/// credentials, query string or fragment; and only the site when
+/// `full` is false. Returns `None` for anything else (`chrome://`, files...).
+pub fn clean_url(url: &str, full: bool) -> Option<String> {
+    let (scheme, rest) = url.trim().split_once("://")?;
+    let scheme = scheme.to_ascii_lowercase();
+    if scheme != "http" && scheme != "https" {
+        return None;
+    }
+    let rest = rest.split(['?', '#']).next()?;
+    let (authority, path) = match rest.split_once('/') {
+        Some((authority, path)) => (authority, path),
+        None => (rest, ""),
+    };
+    let host = authority.rsplit_once('@').map_or(authority, |(_, host)| host).to_lowercase();
+    if host.is_empty() {
+        return None;
+    }
+    let path = if full { path } else { "" };
+    Some(format!("{scheme}://{host}/{path}"))
+}
+
 /// App name for display: `chrome.exe` -> `chrome`.
 pub fn display_app(app: &str) -> &str {
     let lower_ends = |suffix: &str| {
@@ -72,6 +94,18 @@ mod tests {
         assert_eq!(domain_of("docs.rs/serde").as_deref(), Some("docs.rs"));
         assert_eq!(domain_of("https:///nohost"), None);
         assert_eq!(domain_of(""), None);
+    }
+
+    #[test]
+    fn url_cleaning() {
+        let url = "https://user:secret@GitHub.com/MalkSof/zman?tab=readme&token=abc#top";
+        assert_eq!(clean_url(url, true).as_deref(), Some("https://github.com/MalkSof/zman"));
+        assert_eq!(clean_url(url, false).as_deref(), Some("https://github.com/"));
+        assert_eq!(clean_url("http://localhost:3000", true).as_deref(), Some("http://localhost:3000/"));
+        assert_eq!(clean_url("chrome://settings/passwords", true), None);
+        assert_eq!(clean_url("file:///C:/secret.pdf", true), None);
+        assert_eq!(clean_url("about:blank", true), None);
+        assert_eq!(clean_url("https:///x", true), None);
     }
 
     #[test]

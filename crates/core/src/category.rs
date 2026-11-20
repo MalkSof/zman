@@ -69,7 +69,7 @@ impl CategoryRule {
 }
 
 /// `github.com` matches `github.com` and `gist.github.com`, not `notgithub.com`.
-fn domain_matches(pattern: &str, domain: &str) -> bool {
+pub fn domain_matches(pattern: &str, domain: &str) -> bool {
     let pattern = pattern.trim().trim_start_matches("*.").to_lowercase();
     let domain = domain.to_lowercase();
     domain == pattern || domain.ends_with(&format!(".{pattern}"))

@@ -10,6 +10,8 @@ use crate::store::Store;
 pub struct WindowInfo {
     pub app: String,
     pub title: String,
+    /// Page URL when the window is a browser reporting through the extension.
+    pub url: Option<String>,
 }
 
 /// What a call to [`Tracker::tick`] did.
@@ -69,7 +71,7 @@ impl Tracker {
             self.close_current(now_ms)?;
             return Ok(Tick::NoWindow);
         };
-        if self.config.is_excluded(&window.app, &window.title) {
+        if self.config.is_excluded(&window.app, &window.title, window.url.as_deref()) {
             self.close_current(now_ms)?;
             return Ok(Tick::Excluded);
         }
@@ -77,7 +79,7 @@ impl Tracker {
         let same_window = self
             .current
             .as_ref()
-            .is_some_and(|c| c.app == window.app && c.title == window.title);
+            .is_some_and(|c| c.app == window.app && c.title == window.title && c.url() == window.url.as_deref());
         if same_window && self.extend_current(now_ms)? {
             return Ok(Tick::Extended);
         }
@@ -90,7 +92,10 @@ impl Tracker {
             duration_ms: 0,
             app: window.app,
             title: window.title,
-            data: serde_json::json!({}),
+            data: match window.url {
+                Some(url) => serde_json::json!({ "url": url }),
+                None => serde_json::json!({}),
+            },
             updated_at_ms: now_ms,
         };
         self.store.insert_event(&event)?;
@@ -139,7 +144,11 @@ mod tests {
     }
 
     fn win(app: &str, title: &str) -> Option<WindowInfo> {
-        Some(WindowInfo { app: app.into(), title: title.into() })
+        Some(WindowInfo { app: app.into(), title: title.into(), url: None })
+    }
+
+    fn page(title: &str, url: &str) -> Option<WindowInfo> {
+        Some(WindowInfo { app: "chrome.exe".into(), title: title.into(), url: Some(url.into()) })
     }
 
     fn events(t: &Tracker) -> Vec<Event> {
@@ -269,6 +278,32 @@ mod tests {
         // The first event ended when the excluded window took focus.
         assert_eq!(events[0].duration_ms, 1000);
         assert_eq!(events[1].start_ms, T0 + 3000);
+    }
+
+    #[test]
+    fn url_is_stored_and_a_new_url_starts_a_new_event() {
+        let mut t = tracker();
+        t.tick(T0, page("Docs", "https://docs.rs/serde"), 0).unwrap();
+        assert_eq!(t.tick(T0 + 1000, page("Docs", "https://docs.rs/serde"), 0).unwrap(), Tick::Extended);
+        // Same window title, different page.
+        assert_eq!(t.tick(T0 + 2000, page("Docs", "https://docs.rs/toml"), 0).unwrap(), Tick::Started);
+        // The extension stopped reporting: still a different event.
+        assert_eq!(t.tick(T0 + 3000, win("chrome.exe", "Docs"), 0).unwrap(), Tick::Started);
+
+        let events = events(&t);
+        assert_eq!(events[0].url(), Some("https://docs.rs/serde"));
+        assert_eq!(events[0].domain().as_deref(), Some("docs.rs"));
+        assert_eq!(events[1].url(), Some("https://docs.rs/toml"));
+        assert_eq!(events[2].url(), None);
+    }
+
+    #[test]
+    fn excluded_domains_are_never_stored() {
+        let config = Config::parse("[exclude]\ndomains = [\"mybank.com\"]").unwrap();
+        let mut t = tracker_with(config);
+        assert_eq!(t.tick(T0, page("Accounts", "https://online.mybank.com/accounts"), 0).unwrap(), Tick::Excluded);
+        assert_eq!(t.tick(T0 + 1000, page("News", "https://news.example.com/"), 0).unwrap(), Tick::Started);
+        assert_eq!(events(&t).len(), 1);
     }
 
     #[test]

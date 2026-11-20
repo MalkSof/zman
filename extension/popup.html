@@ -1,0 +1,32 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <style>
+    :root { color-scheme: light dark; --ink: #0b0b0b; --muted: #6b6a65; --surface: #fcfcfb; --line: rgba(11,11,11,.12); --good: #0ca30c; --off: #b3b1a8; --accent: #2a78d6; }
+    @media (prefers-color-scheme: dark) { :root { --ink: #f0efec; --muted: #a3a29b; --surface: #1a1a19; --line: rgba(255,255,255,.14); --off: #5b5a55; --accent: #3987e5; } }
+    body { margin: 0; width: 280px; padding: 16px; background: var(--surface); color: var(--ink); font: 13px/1.45 system-ui, "Segoe UI", sans-serif; }
+    header { display: flex; align-items: center; gap: 9px; font-size: 15px; font-weight: 650; }
+    header img { width: 22px; height: 22px; }
+    .status { display: flex; align-items: center; gap: 8px; margin: 14px 0 4px; font-weight: 550; }
+    .dot { width: 9px; height: 9px; border-radius: 50%; background: var(--off); }
+    .on .dot { background: var(--good); box-shadow: 0 0 0 3px color-mix(in srgb, var(--good) 22%, transparent); }
+    p { margin: 0; color: var(--muted); }
+    details { margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--line); color: var(--muted); }
+    summary { cursor: pointer; }
+    label { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 10px; }
+    input { width: 86px; padding: 4px 7px; border: 1px solid var(--line); border-radius: 6px; background: transparent; color: var(--ink); font: inherit; }
+    input:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
+  </style>
+</head>
+<body>
+  <header><img src="icons/48.png" alt="">zman</header>
+  <div class="status" id="status"><span class="dot"></span><span id="status-text"></span></div>
+  <p id="hint"></p>
+  <details>
+    <summary id="advanced"></summary>
+    <label><span id="port-label"></span><input id="port" type="number" min="1" max="65535"></label>
+  </details>
+  <script src="popup.js"></script>
+</body>
+</html>

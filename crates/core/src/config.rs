@@ -2,7 +2,8 @@ use std::path::Path;
 
 use serde::Deserialize;
 
-use crate::category::{Categories, CategoryRule};
+use crate::category::{Categories, CategoryRule, domain_matches};
+use crate::event::domain_of;
 use crate::error::{Error, Result};
 use crate::glob;
 use crate::lang::Lang;
@@ -17,6 +18,7 @@ pub struct Config {
     /// Seconds without keyboard/mouse input before the user counts as away.
     pub afk_threshold_secs: u64,
     pub exclude: Exclude,
+    pub browser: Browser,
     /// Rules assigning apps and titles to categories, in priority order.
     /// When empty, built-in rules are used.
     pub categories: Vec<CategoryRule>,
@@ -31,6 +33,26 @@ pub struct Exclude {
     pub apps: Vec<String>,
     /// Matched against the window title (e.g. `*banco*`).
     pub titles: Vec<String>,
+    /// Sites never recorded, subdomains included (e.g. `mybank.com`).
+    pub domains: Vec<String>,
+}
+
+/// Settings for the browser extension, which reports the active tab to a
+/// local port so events can carry the page URL.
+#[derive(Debug, Clone, PartialEq, Deserialize)]
+#[serde(default, deny_unknown_fields)]
+pub struct Browser {
+    /// Local port the extension talks to. 0 turns the feature off.
+    pub port: u16,
+    /// Store the page path (`https://github.com/user/repo`). When false only
+    /// the site is kept (`https://github.com/`). Query strings are never stored.
+    pub full_urls: bool,
+}
+
+impl Default for Browser {
+    fn default() -> Self {
+        Browser { port: 27184, full_urls: true }
+    }
 }
 
 impl Default for Config {
@@ -39,6 +61,7 @@ impl Default for Config {
             poll_interval_secs: 1,
             afk_threshold_secs: 180,
             exclude: Exclude::default(),
+            browser: Browser::default(),
             categories: Vec::new(),
         }
     }
@@ -54,6 +77,7 @@ impl Default for Exclude {
                 "*Private Browsing*".into(),
                 "*Navegación privada*".into(),
             ],
+            domains: Vec::new(),
         }
     }
 }
@@ -106,9 +130,11 @@ impl Config {
         (self.poll_interval_ms() * 3).max(5000)
     }
 
-    pub fn is_excluded(&self, app: &str, title: &str) -> bool {
+    pub fn is_excluded(&self, app: &str, title: &str, url: Option<&str>) -> bool {
+        let domain = url.and_then(domain_of);
         self.exclude.apps.iter().any(|p| glob::matches(p, app))
             || self.exclude.titles.iter().any(|p| glob::matches(p, title))
+            || domain.is_some_and(|d| self.exclude.domains.iter().any(|p| domain_matches(p, &d)))
     }
 }
 
@@ -189,8 +215,29 @@ name = \"X\"").is_err());
             "#,
         )
         .unwrap();
-        assert!(config.is_excluded("KeePassXC.exe", "Passwords"));
-        assert!(config.is_excluded("chrome.exe", "Mi Banco - Google Chrome"));
-        assert!(!config.is_excluded("chrome.exe", "Rust docs - Google Chrome"));
+        assert!(config.is_excluded("KeePassXC.exe", "Passwords", None));
+        assert!(config.is_excluded("chrome.exe", "Mi Banco - Google Chrome", None));
+        assert!(!config.is_excluded("chrome.exe", "Rust docs - Google Chrome", None));
+    }
+
+    #[test]
+    fn exclusion_by_domain_and_browser_settings() {
+        let config = Config::parse(
+            r#"
+            [exclude]
+            domains = ["mybank.com"]
+
+            [browser]
+            port = 0
+            full_urls = false
+            "#,
+        )
+        .unwrap();
+        assert!(config.is_excluded("chrome.exe", "Accounts", Some("https://www.mybank.com/home")));
+        assert!(config.is_excluded("chrome.exe", "Accounts", Some("https://online.mybank.com/")));
+        assert!(!config.is_excluded("chrome.exe", "Accounts", Some("https://notmybank.com/")));
+        assert!(!config.is_excluded("chrome.exe", "Accounts", None));
+        assert_eq!(config.browser, Browser { port: 0, full_urls: false });
+        assert_eq!(Config::default().browser.port, 27184);
     }
 }
