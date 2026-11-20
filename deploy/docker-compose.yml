@@ -1,0 +1,52 @@
+# zman sync server with Postgres and automatic HTTPS.
+#
+#   cp .env.example .env    # then edit it
+#   docker compose up -d
+#
+# Your server is then at https://ZMAN_DOMAIN and its MCP endpoint at
+# https://ZMAN_DOMAIN/mcp. The domain's DNS must point at this machine and
+# ports 80 and 443 must be open, so Caddy can get a certificate.
+
+services:
+  server:
+    build:
+      context: ..
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: postgres://zman:${POSTGRES_PASSWORD}@db:5432/zman
+      ZMAN_PUBLIC_URL: https://${ZMAN_DOMAIN}
+      ZMAN_ALLOW_REGISTRATION: ${ZMAN_ALLOW_REGISTRATION:-true}
+    depends_on:
+      db:
+        condition: service_healthy
+
+  db:
+    image: postgres:17
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: zman
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: zman
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U zman -d zman"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  caddy:
+    image: caddy:2
+    restart: unless-stopped
+    command: caddy reverse-proxy --from ${ZMAN_DOMAIN} --to server:8787
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - caddy-data:/data
+    depends_on:
+      - server
+
+volumes:
+  db-data:
+  caddy-data:

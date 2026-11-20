@@ -2,6 +2,7 @@
 
 mod live;
 mod reports;
+mod sync;
 mod ui;
 
 use clap::{Parser, Subcommand};
@@ -40,10 +41,36 @@ enum Command {
         #[arg(long, default_value_t = 30)]
         limit: usize,
     },
+    /// Upload this device's events to a zman server (all your devices in one place)
+    Sync {
+        #[command(subcommand)]
+        action: Option<SyncAction>,
+    },
     /// Follow what the daemon is recording, live
     Watch,
     /// Show file locations, device id and whether the daemon is running
     Status,
+}
+
+#[derive(Subcommand)]
+enum SyncAction {
+    /// Sign this device in to a server
+    Login {
+        /// Server address, e.g. https://zman.example.com
+        server: String,
+        /// Account email (asked for if omitted)
+        #[arg(long)]
+        email: Option<String>,
+        /// Create the account first
+        #[arg(long)]
+        register: bool,
+    },
+    /// Upload new events now (the default action)
+    Now,
+    /// Show the account and when the last sync happened
+    Status,
+    /// Sign this device out; local data is kept
+    Logout,
 }
 
 fn main() {
@@ -53,6 +80,12 @@ fn main() {
         Command::Today { date } => reports::today(lang, date.as_deref()),
         Command::Week { date } => reports::week(lang, date.as_deref()),
         Command::Apps { date, week, limit } => reports::apps(lang, date.as_deref(), week, limit),
+        Command::Sync { action } => match action {
+            Some(SyncAction::Login { server, email, register }) => sync::login(lang, &server, email, register),
+            Some(SyncAction::Now) | None => sync::run_now(lang),
+            Some(SyncAction::Status) => sync::status(lang),
+            Some(SyncAction::Logout) => sync::logout(lang),
+        },
         Command::Watch => live::watch(lang),
         Command::Status => live::status(lang),
     };

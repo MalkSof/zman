@@ -10,6 +10,8 @@ repository.workspace = true
 zman-core.workspace = true
 ctrlc = "3.5"
 serde_json.workspace = true
+jiff.workspace = true
+ureq = { version = "3", features = ["json"] }
 
 [target.'cfg(windows)'.dependencies]
 windows-sys = { version = "0.61", features = [

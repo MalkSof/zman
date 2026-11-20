@@ -67,6 +67,44 @@ impl Store {
         Ok(id)
     }
 
+    /// Small key/value settings kept next to the data (sync account, cursor).
+    pub fn meta_get(&self, key: &str) -> Result<Option<String>> {
+        let value = self
+            .conn
+            .query_row("SELECT value FROM meta WHERE key = ?1", params![key], |row| row.get(0))
+            .optional()?;
+        Ok(value)
+    }
+
+    pub fn meta_set(&self, key: &str, value: &str) -> Result<()> {
+        self.conn.execute(
+            "INSERT INTO meta (key, value) VALUES (?1, ?2)
+             ON CONFLICT (key) DO UPDATE SET value = excluded.value",
+            params![key, value],
+        )?;
+        Ok(())
+    }
+
+    pub fn meta_delete(&self, key: &str) -> Result<()> {
+        self.conn.execute("DELETE FROM meta WHERE key = ?1", params![key])?;
+        Ok(())
+    }
+
+    /// Events created or changed after a sync cursor, oldest change first.
+    /// The cursor is the `(updated_at_ms, id)` of the last event already sent.
+    pub fn events_after(&self, updated_at_ms: i64, id: &str, limit: u32) -> Result<Vec<Event>> {
+        let sql = format!(
+            "SELECT {EVENT_COLUMNS} FROM events
+             WHERE (updated_at_ms, id) > (?1, ?2)
+             ORDER BY updated_at_ms, id LIMIT ?3"
+        );
+        let mut stmt = self.conn.prepare(&sql)?;
+        let events = stmt
+            .query_map(params![updated_at_ms, id, limit], read_event)?
+            .collect::<rusqlite::Result<Vec<Event>>>()?;
+        Ok(events)
+    }
+
     pub fn insert_event(&self, event: &Event) -> Result<()> {
         self.conn.execute(
             "INSERT INTO events (id, device_id, start_ms, duration_ms, app, title, data, updated_at_ms)
@@ -221,6 +259,39 @@ mod tests {
         // Touching the boundary is not overlapping.
         assert_eq!(ids(1000, 1500), Vec::<String>::new());
         assert_eq!(ids(2500, 3000), Vec::<String>::new());
+    }
+
+    #[test]
+    fn meta_values_can_be_set_replaced_and_deleted() {
+        let store = Store::open_in_memory().unwrap();
+        assert_eq!(store.meta_get("k").unwrap(), None);
+        store.meta_set("k", "one").unwrap();
+        store.meta_set("k", "two").unwrap();
+        assert_eq!(store.meta_get("k").unwrap().as_deref(), Some("two"));
+        store.meta_delete("k").unwrap();
+        assert_eq!(store.meta_get("k").unwrap(), None);
+    }
+
+    #[test]
+    fn events_after_walks_changes_in_order_without_repeats() {
+        let store = Store::open_in_memory().unwrap();
+        // B and C share the same updated_at_ms: the id breaks the tie.
+        for (id, start, updated) in [("A", 0, 10), ("C", 2000, 20), ("B", 1000, 20), ("D", 3000, 30)] {
+            let mut e = event(id, start);
+            e.updated_at_ms = updated;
+            store.insert_event(&e).unwrap();
+        }
+        let ids = |ms, id: &str, limit| -> Vec<String> {
+            store.events_after(ms, id, limit).unwrap().into_iter().map(|e| e.id).collect()
+        };
+        assert_eq!(ids(0, "", 10), vec!["A", "B", "C", "D"]);
+        assert_eq!(ids(0, "", 2), vec!["A", "B"]);
+        assert_eq!(ids(20, "B", 10), vec!["C", "D"]);
+        assert_eq!(ids(30, "D", 10), Vec::<String>::new());
+
+        // An event that grows moves past the cursor again.
+        store.set_duration("A", 9000, 40).unwrap();
+        assert_eq!(ids(30, "D", 10), vec!["A"]);
     }
 
     #[test]

@@ -1,10 +1,12 @@
+use serde::{Deserialize, Serialize};
+
 /// A span of time during which one window was active.
 ///
 /// Events are append-only. The only mutation ever applied to a stored event
 /// is changing `duration_ms` (heartbeat extension or AFK trim), and every
 /// such change bumps `updated_at_ms` so a future sync can pick it up with a
 /// cursor on that column.
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct Event {
     /// ULID: globally unique and sortable by creation time.
     pub id: String,

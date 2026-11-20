@@ -1,0 +1,5 @@
+target
+.git
+crates/desktop/gen
+android
+extension

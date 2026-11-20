@@ -1,4 +1,4 @@
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 
 use crate::error::{Error, Result};
 use crate::event::Event;
@@ -11,7 +11,7 @@ use crate::lang::Lang;
 /// with only `apps`, the app must match one of them; with `apps` and
 /// `titles`, both the app and the title must match. To express "this OR
 /// that", write two rules with the same `name`.
-#[derive(Debug, Clone, PartialEq, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct CategoryRule {
     pub name: String,
@@ -29,7 +29,7 @@ pub struct CategoryRule {
 }
 
 impl CategoryRule {
-    pub(crate) fn validate(&self) -> Result<()> {
+    pub fn validate(&self) -> Result<()> {
         if self.name.trim().is_empty() {
             return Err(Error::Config("a category has an empty name".into()));
         }

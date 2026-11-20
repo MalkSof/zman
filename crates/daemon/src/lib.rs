@@ -2,6 +2,7 @@
 
 pub mod browser;
 pub mod platform;
+pub mod sync;
 
 use std::fmt;
 use std::fs::File;
@@ -70,13 +71,47 @@ pub fn run(paths: &Paths, config: Config, control: &Control, on_ready: impl FnOn
         },
     };
     let store = Store::open(&paths.db_file).map_err(other)?;
+    let sync_config = config.clone();
     let mut tracker = Tracker::new(store, config).map_err(other)?;
     on_ready();
+
+    // Signed-in devices upload on their own, on a separate connection so a
+    // slow network never delays tracking. Scoped: it ends with this function.
+    std::thread::scope(|scope| {
+        scope.spawn(|| sync_periodically(paths, &sync_config, control));
+        track(&mut tracker, platform.as_ref(), active_tab.as_ref(), poll_interval, control);
+    });
+    Ok(())
+}
+
+/// Syncs shortly after start and then every few minutes, until stopped.
+fn sync_periodically(paths: &Paths, config: &Config, control: &Control) {
+    const EVERY: Duration = Duration::from_secs(5 * 60);
+    let mut next = Instant::now() + Duration::from_secs(20);
+    while !control.stop.load(Ordering::SeqCst) {
+        if Instant::now() >= next {
+            next = Instant::now() + EVERY;
+            let result = Store::open(&paths.db_file).map_err(|e| e.to_string()).and_then(|store| sync::run(&store, config));
+            if let Err(e) = result {
+                eprintln!("zman: sync failed, will retry: {e}");
+            }
+        }
+        sleep(Duration::from_millis(250));
+    }
+}
+
+fn track(
+    tracker: &mut Tracker,
+    platform: &dyn platform::Platform,
+    active_tab: Option<&browser::ActiveTab>,
+    poll_interval: Duration,
+    control: &Control,
+) {
 
     while !control.stop.load(Ordering::SeqCst) {
         if !control.paused.load(Ordering::SeqCst) {
             let mut window = platform.active_window();
-            if let (Some(window), Some(active_tab)) = (window.as_mut(), active_tab.as_ref()) {
+            if let (Some(window), Some(active_tab)) = (window.as_mut(), active_tab) {
                 active_tab.annotate(window);
             }
             let idle_ms = platform.idle_time().as_millis() as i64;
@@ -92,5 +127,4 @@ pub fn run(paths: &Paths, config: Config, control: &Control, on_ready: impl FnOn
             sleep(Duration::from_millis(100));
         }
     }
-    Ok(())
 }

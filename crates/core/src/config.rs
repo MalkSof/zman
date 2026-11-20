@@ -19,6 +19,7 @@ pub struct Config {
     pub afk_threshold_secs: u64,
     pub exclude: Exclude,
     pub browser: Browser,
+    pub sync: Sync,
     /// Rules assigning apps and titles to categories, in priority order.
     /// When empty, built-in rules are used.
     pub categories: Vec<CategoryRule>,
@@ -49,6 +50,22 @@ pub struct Browser {
     pub full_urls: bool,
 }
 
+/// What is sent when this device syncs to a zman server. Whether it syncs
+/// at all is decided by signing in (`zman sync login`), not here.
+#[derive(Debug, Clone, PartialEq, Deserialize)]
+#[serde(default, deny_unknown_fields)]
+pub struct Sync {
+    /// Send window titles. When false they stay on this device and the
+    /// server only learns apps, sites and durations.
+    pub titles: bool,
+}
+
+impl Default for Sync {
+    fn default() -> Self {
+        Sync { titles: true }
+    }
+}
+
 impl Default for Browser {
     fn default() -> Self {
         Browser { port: 27184, full_urls: true }
@@ -62,6 +79,7 @@ impl Default for Config {
             afk_threshold_secs: 180,
             exclude: Exclude::default(),
             browser: Browser::default(),
+            sync: Sync::default(),
             categories: Vec::new(),
         }
     }
@@ -239,5 +257,7 @@ name = \"X\"").is_err());
         assert!(!config.is_excluded("chrome.exe", "Accounts", None));
         assert_eq!(config.browser, Browser { port: 0, full_urls: false });
         assert_eq!(Config::default().browser.port, 27184);
+        assert!(Config::default().sync.titles);
+        assert!(!Config::parse("[sync]\ntitles = false").unwrap().sync.titles);
     }
 }
