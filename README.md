@@ -3,69 +3,205 @@
 **English** · [Español](README.es.md)
 
 Automatic, local-first time tracker written in Rust. An open source
-alternative to RescueTime: it records which window you are using and for how
-long, and keeps the data on your machine.
+alternative to RescueTime: it records which app and site you are using and for
+how long, shows you where your time goes, and lets your AI assistant answer
+questions about it. Your data stays on your machine unless you choose to sync
+it to your own server.
 
-> Status: early development. Windows only for now.
+> Status: early. Developed and tested on Windows. See
+> [what has been verified](#what-has-been-verified).
+
+## What is in the box
+
+| Piece | What it does |
+|---|---|
+| **Desktop app** (`zman-app`) | Tracks in the background, lives in the system tray, starts with the system, shows the dashboard and connects AI assistants |
+| **CLI** (`zman`) | `today`, `week`, `apps`, `watch`, `status`, `sync` |
+| **Daemon** (`zman-daemon`) | The tracker alone, for those who do not want the app |
+| **Local MCP server** (`zman-mcp`, or `zman-app --mcp`) | Read-only tools for Claude and other assistants on this computer |
+| **Browser extension** (`extension/`) | Adds the site of the active tab to your tracking |
+| **Sync server** (`zman-server`) | Collects all your devices; remote MCP with sign-in for ChatGPT and Claude on the web |
+| **Android app** (`android/`) | Adds your phone's app usage |
 
 ## Privacy
 
-- zman never records keystrokes or screen content. It only reads the active
+- zman never records keystrokes or screen content. It reads the active
   window's app name and title, and *how long ago* the last input happened.
-- Apps and window titles you exclude are never written to disk.
-- All data stays in a local SQLite file.
+- Apps, window titles and sites you exclude are never written to disk.
+- Private browser windows are never reported. Query strings of URLs are never
+  stored.
+- AI assistants only ever receive aggregates (time per category, app and
+  site). Window titles are never exposed through MCP.
+- Nothing leaves your computer unless you sign in to a sync server, and you
+  can keep window titles local even then.
 
-## Build and run
+## Quick start
+
+You need [Rust](https://rustup.rs). On Windows the app uses WebView2, which
+Windows 10 and 11 already include.
 
 ```sh
 cargo build --release
+./target/release/zman-app
 ```
 
-Start the tracker and leave it running:
+The app opens the dashboard and keeps tracking from the tray when you close
+the window. Turn on **Start with the system** in its settings menu.
+
+Prefer the terminal? Run `./target/release/zman-daemon` instead and use the
+CLI:
 
 ```sh
-./target/release/zman-daemon
-```
-
-In another terminal:
-
-```sh
-./target/release/zman watch    # follow what is being recorded, live
-./target/release/zman status   # file locations, device id, event count
+zman today            # hours, categories, top apps and sites of today
+zman week             # the week, day by day
+zman apps --week      # every app
+zman watch            # what is being recorded, live
+zman today --date 2026-11-19
 ```
 
 Messages are shown in Spanish when the system language is Spanish, and in
-English otherwise. Set the `ZMAN_LANG` environment variable (`es` or `en`) to
-force one.
+English otherwise. Set `ZMAN_LANG` (`es` or `en`) to force one.
+
+## Connect your AI assistant
+
+Open the app and press **Connect**.
+
+- **Claude Desktop**: one click, then restart Claude Desktop.
+- **Claude Code**: run the command the dialog shows
+  (`claude mcp add zman -- "<path>/zman-app" --mcp`).
+- **ChatGPT, Claude on the web, or several devices**: sign in to a
+  [sync server](#sync-server) from the same dialog. It gives you an address
+  like `https://your-server/mcp`; add it as a custom connector in your
+  assistant and sign in with the same email and password.
+
+Then ask things like *"how did I spend my week?"*, *"compare this week with
+the last one"* or *"when were my focus blocks yesterday?"*.
+
+Tools: `daily_summary`, `weekly_summary`, `time_by_category`, `time_by_app`,
+`compare_periods`, `focus_blocks`.
+
+## Browser extension
+
+Without it, a browser counts as one app. With it, zman knows the site.
+
+1. Open `chrome://extensions` (or `edge://extensions`).
+2. Turn on **Developer mode**.
+3. **Load unpacked** and pick the `extension/` folder.
+
+The extension talks only to zman on `127.0.0.1`. Its popup shows whether zman
+is running.
 
 ## Configuration
 
-Optional. `zman status` prints where the file goes
-(`%APPDATA%\zman\config\config.toml` on Windows). Restart the daemon after
-editing it.
+Optional. `zman status` prints where `config.toml` goes
+(`%APPDATA%\zman\config\config.toml` on Windows). Restart the tracker after
+editing it; reports pick up category changes right away.
 
 ```toml
-# How often the active window is sampled.
-poll_interval_secs = 1
-# Seconds without keyboard/mouse input before you count as away.
-# Time away is not recorded.
-afk_threshold_secs = 180
+poll_interval_secs = 1     # how often the active window is sampled
+afk_threshold_secs = 180   # seconds without input before you count as away
 
-[exclude]
-# Case-insensitive, `*` is a wildcard.
+[exclude]                  # never recorded; `*` is a wildcard, case-insensitive
 apps = ["keepassxc.exe"]
-titles = ["*InPrivate*", "*Private Browsing*", "*Navegación privada*", "*banco*"]
+titles = ["*InPrivate*", "*Private Browsing*", "*banco*"]
+domains = ["mybank.com"]
+
+[browser]
+port = 27184               # 0 turns extension support off
+full_urls = true           # false keeps only the site, not the page path
+
+[sync]
+titles = true              # false keeps window titles on this device
+
+# Categories, in priority order: the first rule that matches wins.
+# Within a rule, every kind of pattern given must match.
+# score: -2 (very distracting) to 2 (very productive).
+[[categories]]
+name = "Deep work"
+score = 2
+apps = ["code.exe", "windowsterminal.exe"]
+
+[[categories]]
+name = "Video"
+score = -2
+domains = ["youtube.com", "netflix.com"]
+
+[[categories]]
+name = "Video"
+score = -2
+apps = ["chrome.exe"]
+titles = ["*youtube*"]
 ```
 
-If `titles` is omitted, private browsing windows of Edge and Firefox are
-excluded by default.
+Without `[[categories]]`, zman uses built-in rules (Development, Work,
+Communication, Browsing, System, Entertainment). Defining your own replaces
+them. Categories are applied when you look at the data, so changing a rule
+re-categorizes your whole history.
+
+## Sync server
+
+Only needed to combine several devices, to use ChatGPT or Claude on the web,
+or to query your data from anywhere. It needs a machine with Docker and a
+domain name pointing at it.
+
+```sh
+cd deploy
+cp .env.example .env     # set your domain and a database password
+docker compose up -d
+```
+
+That starts the server, Postgres and Caddy with automatic HTTPS. Then, on each
+computer:
+
+```sh
+zman sync login https://your-domain --register   # the first time
+zman sync login https://your-domain              # other devices
+```
+
+or use **Connect** in the app. Devices upload on their own every few minutes.
+Once your account exists, set `ZMAN_ALLOW_REGISTRATION=false` in `.env` and
+run `docker compose up -d` again so nobody else can sign up.
+
+To try the server without Docker or Postgres (data is lost on exit):
+
+```sh
+DATABASE_URL=memory: cargo run -p zman-server
+```
+
+## Android
+
+`android/` is an Android Studio project. The app asks for *usage access*,
+shows today's time per app, and uploads sessions to your sync server every 30
+minutes. Open the folder in Android Studio and run it on a phone.
 
 ## Layout
 
-- `crates/core` — event model, SQLite storage, config, tracking logic.
-- `crates/daemon` — background process; OS specific code sits behind the
-  `Platform` trait in `src/platform`.
+- `crates/core` — event model, SQLite storage, config, categories, reports.
+- `crates/daemon` — tracking loop, browser listener, sync client; OS specific
+  code sits behind the `Platform` trait in `src/platform`.
 - `crates/cli` — the `zman` command.
+- `crates/mcp` — MCP protocol and tools, shared by the local and remote servers.
+- `crates/desktop` — Tauri app; the dashboard is plain HTML/CSS/JS in `ui/`.
+- `crates/server` — sync API, OAuth and remote MCP (Axum + Postgres).
+- `extension/` — browser extension. `android/` — Android app. `deploy/` — Docker Compose.
+
+Demo data, to try the reports and dashboard right away:
+
+```sh
+ZMAN_HOME=./demo cargo run -p zman-core --example seed_demo
+ZMAN_HOME=./demo cargo run -p zman-cli -- week
+```
+
+## What has been verified
+
+- **Tested on Windows 11**: tracker, CLI, local MCP, desktop app, the browser
+  listener (with simulated requests) and the server on in-memory storage,
+  including the whole OAuth flow and remote MCP. `cargo test` covers the core
+  logic, the MCP tools and the server's HTTP API.
+- **Not yet run**: the server against a real Postgres, the Docker image, the
+  browser extension inside a browser, the Android app (written without an
+  Android SDK at hand), and connecting ChatGPT or Claude on the web to a
+  deployed server. macOS and Linux need a `Platform` implementation.
 
 ## License
 

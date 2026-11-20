@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="access_title">Permitir acceso de uso</string>
+    <string name="access_text">zman necesita saber qué app está en pantalla y por cuánto tiempo. Nunca ve lo que hacés dentro de las apps.</string>
+    <string name="grant">Abrir ajustes</string>
+    <string name="today">Hoy en este teléfono</string>
+    <string name="nothing_yet">Todavía nada hoy.</string>
+    <string name="login_title">Sincronizar con tus otros dispositivos</string>
+    <string name="login_text">Iniciá sesión en tu servidor zman para sumar este teléfono a tus reportes y a tu asistente de IA.</string>
+    <string name="server">Servidor (https://…)</string>
+    <string name="email">Email</string>
+    <string name="password">Contraseña</string>
+    <string name="sign_in">Iniciar sesión</string>
+    <string name="sign_out">Cerrar sesión</string>
+    <string name="sync_now">Sincronizar ahora</string>
+    <string name="never">nunca</string>
+    <string name="signed_in_as">Sesión iniciada como %1$s\n%2$s\nÚltimo sync: %3$s</string>
+    <string name="synced">Sesiones subidas: %1$d</string>
+</resources>

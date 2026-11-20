@@ -198,6 +198,21 @@ impl Categories {
                 "spotify.exe", "steam.exe", "steamwebhelper.exe", "vlc.exe", "netflix.exe",
                 "epicgameslauncher.exe", "wmplayer.exe",
             ], &[], &[]),
+            // Phone apps, by the name Android shows for them.
+            rule(comm, 0, &[
+                "whatsapp", "whatsapp business", "telegram", "gmail", "messages", "phone", "slack",
+                "discord", "outlook", "signal", "meet", "zoom", "teams", "linkedin",
+            ], &[], &[]),
+            rule(fun, -2, &[
+                "youtube", "youtube music", "instagram", "tiktok", "netflix", "spotify", "facebook",
+                "x", "reddit", "twitch", "threads", "prime video", "disney+",
+            ], &[], &[]),
+            rule(work, 2, &[
+                "docs", "sheets", "slides", "drive", "calendar", "notion", "claude", "chatgpt",
+                "obsidian", "keep notes",
+            ], &[], &[]),
+            rule(dev, 2, &["github", "termux"], &[], &[]),
+            rule(browsing, 0, &["chrome", "firefox", "brave", "edge", "opera", "samsung internet"], &[], &[]),
             rule(browsing, 0, BROWSERS, &[], &[]),
             rule(system, 0, &[
                 "explorer.exe", "searchhost.exe", "shellexperiencehost.exe",
@@ -285,6 +300,10 @@ mod tests {
         assert_eq!(cats.classify(&event("chrome.exe", "Inbox - Gmail - Google Chrome", None)).0, "Communication");
         assert_eq!(cats.classify(&event("chrome.exe", "Some blog - Google Chrome", None)).0, "Browsing");
         assert_eq!(cats.classify(&event("slack.exe", "general", None)).0, "Communication");
+        // Phone apps are known by their name.
+        assert_eq!(cats.classify(&event("WhatsApp", "", None)).0, "Communication");
+        assert_eq!(cats.classify(&event("YouTube", "", None)).0, "Entertainment");
+        assert_eq!(cats.classify(&event("Chrome", "", None)).0, "Browsing");
         // The URL wins over a misleading title.
         let e = event("chrome.exe", "How to grow on YouTube - Google Chrome", Some("https://github.com/a/b"));
         assert_eq!(cats.classify(&e).0, "Development");

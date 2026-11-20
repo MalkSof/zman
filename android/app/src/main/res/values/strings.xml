@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">zman</string>
+    <string name="access_title">Allow usage access</string>
+    <string name="access_text">zman needs to know which app is on screen and for how long. It never sees what you do inside apps.</string>
+    <string name="grant">Open settings</string>
+    <string name="today">Today on this phone</string>
+    <string name="nothing_yet">Nothing yet today.</string>
+    <string name="login_title">Sync with your other devices</string>
+    <string name="login_text">Sign in to your zman server to add this phone to your reports and to your AI assistant.</string>
+    <string name="server">Server (https://…)</string>
+    <string name="email">Email</string>
+    <string name="password">Password</string>
+    <string name="sign_in">Sign in</string>
+    <string name="sign_out">Sign out</string>
+    <string name="sync_now">Sync now</string>
+    <string name="never">never</string>
+    <string name="signed_in_as">Signed in as %1$s\n%2$s\nLast sync: %3$s</string>
+    <string name="synced">Sessions uploaded: %1$d</string>
+</resources>
