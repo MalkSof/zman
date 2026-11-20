@@ -10,6 +10,7 @@ const TEXT = {
     day: "Day", week: "Week", today: "Today", thisWeek: "This week",
     previous: "Previous", next: "Next", settings: "Settings",
     autostart: "Start with the system", pause: "Pause tracking",
+    language: "Language", languageAuto: "Automatic",
     database: "Database", config: "Config file",
     categories: "Categories", apps: "Top apps", sites: "Top sites",
     tracked: "Time tracked", productivity: "Productivity", focus: "Focus time", topCategory: "Top category",
@@ -49,6 +50,7 @@ const TEXT = {
     day: "Día", week: "Semana", today: "Hoy", thisWeek: "Esta semana",
     previous: "Anterior", next: "Siguiente", settings: "Ajustes",
     autostart: "Iniciar con el sistema", pause: "Pausar el registro",
+    language: "Idioma", languageAuto: "Automático",
     database: "Base de datos", config: "Archivo de configuración",
     categories: "Categorías", apps: "Apps más usadas", sites: "Sitios más visitados",
     tracked: "Tiempo registrado", productivity: "Productividad", focus: "Tiempo de foco", topCategory: "Categoría principal",
@@ -152,6 +154,7 @@ function renderStatus(status) {
   $("autostart").checked = status.autostart;
   $("paused").checked = status.tracking === "paused";
   $("paused").disabled = status.tracking === "external" || status.tracking === "stopped";
+  $("language").value = status.language || "auto";
   $("db-path").textContent = status.db_path;
   $("config-path").textContent = status.config_path;
 }
@@ -381,6 +384,11 @@ document.addEventListener("keydown", (event) => {
 });
 $("autostart").addEventListener("change", async (event) => {
   renderStatus(await invoke("set_autostart", { enabled: event.target.checked }));
+});
+$("language").addEventListener("change", async (event) => {
+  await invoke("set_language", { language: event.target.value });
+  // Everything on screen, including dates and category names, is redrawn.
+  load();
 });
 $("paused").addEventListener("change", async (event) => {
   renderStatus(await invoke("set_paused", { paused: event.target.checked }));

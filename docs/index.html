@@ -1,0 +1,214 @@
+<!doctype html>
+<html lang="en" data-lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>zman — know where your time goes, and ask Claude about it</title>
+  <meta name="description" content="Open source, local-first automatic time tracker. See where your time goes and ask Claude or ChatGPT about it. Your data stays on your computer.">
+  <link rel="icon" href="icon.png">
+  <link rel="stylesheet" href="site.css">
+</head>
+<body>
+  <header class="nav">
+    <a class="brand" href="#top"><img src="icon.png" alt="" width="28" height="28">zman</a>
+    <nav>
+      <a href="#claude">Claude</a>
+      <a href="#demo">Demo</a>
+      <a href="#privacy"><span lang="en">Privacy</span><span lang="es">Privacidad</span></a>
+      <a href="#services"><span lang="en">Services</span><span lang="es">Servicios</span></a>
+    </nav>
+    <div class="nav-right">
+      <button class="lang-toggle" id="lang-toggle" aria-label="Language"><b data-code="en">EN</b><b data-code="es">ES</b></button>
+      <a class="btn small" href="https://github.com/MalkSof/zman">GitHub</a>
+    </div>
+  </header>
+
+  <main id="top">
+    <section class="hero">
+      <p class="eyebrow">
+        <span lang="en">Open source · local-first · written in Rust</span>
+        <span lang="es">Open source · local-first · escrito en Rust</span>
+      </p>
+      <h1>
+        <span lang="en">Know where your time goes.<br><em>Then ask Claude about it.</em></span>
+        <span lang="es">Sabé a dónde se va tu tiempo.<br><em>Y preguntáselo a Claude.</em></span>
+      </h1>
+      <p class="lead">
+        <span lang="en">zman quietly records which apps and sites you use and for how long. No timers, no buttons. Your data stays on your computer, and your AI assistant can answer questions about it in plain language.</span>
+        <span lang="es">zman registra en silencio qué apps y sitios usás y por cuánto tiempo. Sin cronómetros ni botones. Tus datos quedan en tu computadora, y tu asistente de IA puede responder preguntas sobre ellos en lenguaje natural.</span>
+      </p>
+      <div class="cta">
+        <a class="btn" href="https://github.com/MalkSof/zman#quick-start">
+          <span lang="en">Get zman</span><span lang="es">Conseguir zman</span>
+        </a>
+        <a class="btn ghost" href="#demo">
+          <span lang="en">Try the live demo</span><span lang="es">Probar la demo en vivo</span>
+        </a>
+      </div>
+    </section>
+
+    <section class="claude" id="claude">
+      <div class="claude-text">
+        <p class="eyebrow"><span lang="en">Connected to Claude</span><span lang="es">Conectado con Claude</span></p>
+        <h2>
+          <span lang="en">Your time, answered in a sentence.</span>
+          <span lang="es">Tu tiempo, respondido en una frase.</span>
+        </h2>
+        <p>
+          <span lang="en">Dashboards make you go looking. With zman you just ask: how the week went, what ate your afternoon, when you actually focus. Claude reads your real numbers and answers.</span>
+          <span lang="es">Los dashboards te obligan a ir a buscar. Con zman simplemente preguntás: cómo fue la semana, qué se comió tu tarde, cuándo te concentrás de verdad. Claude lee tus números reales y responde.</span>
+        </p>
+        <ul class="ticks">
+          <li><span lang="en"><b>One click.</b> Press Connect in the app and Claude Desktop has the zman tools.</span><span lang="es"><b>Un clic.</b> Tocás Conectar en la app y Claude Desktop ya tiene las herramientas de zman.</span></li>
+          <li><span lang="en"><b>Only totals.</b> Claude gets time per category, app and site. Never window titles, never what you typed.</span><span lang="es"><b>Solo totales.</b> Claude recibe tiempo por categoría, app y sitio. Nunca títulos de ventana, nunca lo que escribiste.</span></li>
+          <li><span lang="en"><b>Read-only.</b> The assistant can look, compare and summarize. It cannot change or delete anything.</span><span lang="es"><b>Solo lectura.</b> El asistente puede mirar, comparar y resumir. No puede cambiar ni borrar nada.</span></li>
+          <li><span lang="en"><b>ChatGPT too.</b> Run your own zman server and connect ChatGPT or Claude on the web by signing in.</span><span lang="es"><b>También ChatGPT.</b> Levantá tu propio servidor zman y conectá ChatGPT o Claude en la web iniciando sesión.</span></li>
+        </ul>
+      </div>
+
+      <div class="chat" aria-label="Example conversation">
+        <div class="bubble user">
+          <span lang="en">Where did my week go?</span><span lang="es">¿En qué se me fue la semana?</span>
+        </div>
+        <div class="tool"><i></i>zman · weekly_summary</div>
+        <div class="bubble bot">
+          <span lang="en">You tracked <b>41h 39m</b> with a productivity score of <b>87/100</b>. Development took <b>23h 38m</b> (57%), other work 9h 56m and communication 4h 05m. Friday was your longest day at 8h 01m. Entertainment added up to 2h 42m, mostly YouTube.</span>
+          <span lang="es">Registraste <b>41 h 39 min</b> con una productividad de <b>87/100</b>. Desarrollo se llevó <b>23 h 38 min</b> (57%), otro trabajo 9 h 56 min y comunicación 4 h 05 min. El viernes fue tu día más largo, con 8 h 01 min. Entretenimiento sumó 2 h 42 min, sobre todo YouTube.</span>
+        </div>
+        <div class="bubble user">
+          <span lang="en">And compared with the week before?</span><span lang="es">¿Y comparado con la semana anterior?</span>
+        </div>
+        <div class="tool"><i></i>zman · compare_periods</div>
+        <div class="bubble bot">
+          <span lang="en">About 7 hours less tracked, and productivity went from 87 to 84. Development dropped 13% while communication grew 12%.</span>
+          <span lang="es">Unas 7 horas menos registradas, y la productividad pasó de 87 a 84. Desarrollo bajó 13% mientras comunicación subió 12%.</span>
+        </div>
+        <p class="chat-note"><span lang="en">Illustrative example, using the demo data below.</span><span lang="es">Ejemplo ilustrativo, con los datos de la demo de abajo.</span></p>
+      </div>
+    </section>
+
+    <section id="demo" class="demo">
+      <h2><span lang="en">This is the app. Go ahead, click around.</span><span lang="es">Esta es la app. Dale, tocá lo que quieras.</span></h2>
+      <p class="section-lead">
+        <span lang="en">The real dashboard running on made-up data. Switch between day and week, hover the chart, open Connect.</span>
+        <span lang="es">El dashboard real corriendo sobre datos inventados. Cambiá entre día y semana, pasá el mouse por el gráfico, abrí Conectar.</span>
+      </p>
+      <div class="window">
+        <div class="window-bar"><i></i><i></i><i></i><span>zman</span></div>
+        <iframe id="demo-frame" title="zman dashboard demo" loading="lazy"></iframe>
+      </div>
+    </section>
+
+    <section class="features">
+      <h2><span lang="en">Everything it does</span><span lang="es">Todo lo que hace</span></h2>
+      <div class="grid">
+        <article>
+          <h3><span lang="en">Tracks by itself</span><span lang="es">Registra solo</span></h3>
+          <p><span lang="en">Lives in the system tray and starts with your computer. When you step away, the clock stops.</span><span lang="es">Vive en la bandeja del sistema e inicia con tu computadora. Cuando te alejás, el reloj se detiene.</span></p>
+        </article>
+        <article>
+          <h3><span lang="en">Categories and a score</span><span lang="es">Categorías y puntaje</span></h3>
+          <p><span lang="en">Apps and sites fall into categories with a productivity score from 0 to 100. Change a rule and your whole history follows.</span><span lang="es">Las apps y sitios caen en categorías con un puntaje de productividad de 0 a 100. Cambiás una regla y todo tu historial se actualiza.</span></p>
+        </article>
+        <article>
+          <h3><span lang="en">Focus blocks</span><span lang="es">Bloques de foco</span></h3>
+          <p><span lang="en">See the stretches of 25 minutes or more of real work, and what broke them.</span><span lang="es">Mirá los tramos de 25 minutos o más de trabajo real, y qué los cortó.</span></p>
+        </article>
+        <article>
+          <h3><span lang="en">Sites, not just "Chrome"</span><span lang="es">Sitios, no solo "Chrome"</span></h3>
+          <p><span lang="en">A small browser extension tells zman which site you are on. It talks only to your own computer.</span><span lang="es">Una pequeña extensión de navegador le dice a zman en qué sitio estás. Solo habla con tu propia computadora.</span></p>
+        </article>
+        <article>
+          <h3><span lang="en">All your devices</span><span lang="es">Todos tus dispositivos</span></h3>
+          <p><span lang="en">Optional sync to a server you host yourself with Docker. Computers and an Android phone in one place.</span><span lang="es">Sync opcional a un servidor que alojás vos con Docker. Computadoras y un teléfono Android en un solo lugar.</span></p>
+        </article>
+        <article>
+          <h3><span lang="en">A terminal, if you like</span><span lang="es">Una terminal, si preferís</span></h3>
+          <p><span lang="en"><code>zman today</code>, <code>zman week</code>, <code>zman apps</code>. The same reports, with bars and colors.</span><span lang="es"><code>zman today</code>, <code>zman week</code>, <code>zman apps</code>. Los mismos reportes, con barras y colores.</span></p>
+        </article>
+      </div>
+    </section>
+
+    <section id="privacy" class="privacy">
+      <div>
+        <h2><span lang="en">Private by design</span><span lang="es">Privado por diseño</span></h2>
+        <p class="section-lead"><span lang="en">The code is open: you can check every one of these.</span><span lang="es">El código es abierto: podés verificar cada una de estas.</span></p>
+      </div>
+      <ul class="ticks">
+        <li><span lang="en">Never records keystrokes or what is on your screen.</span><span lang="es">Nunca registra teclas ni lo que hay en tu pantalla.</span></li>
+        <li><span lang="en">Data lives in a file on your computer. No account needed.</span><span lang="es">Los datos viven en un archivo en tu computadora. No hace falta cuenta.</span></li>
+        <li><span lang="en">Exclude any app, window title or site: it is never written to disk.</span><span lang="es">Excluí cualquier app, título de ventana o sitio: nunca se escribe en disco.</span></li>
+        <li><span lang="en">Private browser windows are never reported.</span><span lang="es">Las ventanas privadas del navegador nunca se informan.</span></li>
+        <li><span lang="en">If you sync, it is to your own server, and window titles can stay home.</span><span lang="es">Si sincronizás, es a tu propio servidor, y los títulos de ventana pueden quedarse en casa.</span></li>
+      </ul>
+    </section>
+
+    <section id="services" class="services">
+      <h2><span lang="en">Need more than the app?</span><span lang="es">¿Necesitás más que la app?</span></h2>
+      <p class="section-lead">
+        <span lang="en">zman is free and open source. We also set it up and build on it for teams and families. These are services done to order, not features of the free app.</span>
+        <span lang="es">zman es gratis y open source. Además lo instalamos y construimos sobre él para equipos y familias. Son servicios a medida, no funciones de la app gratuita.</span>
+      </p>
+      <div class="grid three">
+        <article>
+          <p class="tag"><span lang="en">For companies</span><span lang="es">Para empresas</span></p>
+          <h3><span lang="en">Visibility across your computers</span><span lang="es">Visibilidad sobre tus computadoras</span></h3>
+          <p><span lang="en">We deploy zman on your team's machines with a private server of your own, and build the reports you need: time per project, tool usage, focus time. Done transparently, with your people informed, and without screenshots or keystrokes.</span><span lang="es">Desplegamos zman en las máquinas de tu equipo con un servidor privado propio, y armamos los reportes que necesitás: tiempo por proyecto, uso de herramientas, tiempo de foco. De forma transparente, con tu gente informada, y sin capturas de pantalla ni registro de teclas.</span></p>
+        </article>
+        <article>
+          <p class="tag"><span lang="en">For families</span><span lang="es">Para familias</span></p>
+          <h3><span lang="en">Know how your kids use the computer</span><span lang="es">Sabé cómo usan la compu tus hijos</span></h3>
+          <p><span lang="en">We set up zman on the family computers so you can see screen time by app and site, and ask about it from your phone. Limits and site filters are in development; tell us what you need.</span><span lang="es">Instalamos zman en las computadoras de la familia para que veas el tiempo de pantalla por app y sitio, y lo consultes desde tu teléfono. Los límites y filtros de sitios están en desarrollo; contanos qué necesitás.</span></p>
+        </article>
+        <article>
+          <p class="tag"><span lang="en">Custom</span><span lang="es">A medida</span></p>
+          <h3><span lang="en">Hosting, integrations and support</span><span lang="es">Hosting, integraciones y soporte</span></h3>
+          <p><span lang="en">We host and maintain your zman server, connect it to your AI assistant, and adapt categories and reports to how you work.</span><span lang="es">Alojamos y mantenemos tu servidor zman, lo conectamos con tu asistente de IA y adaptamos categorías y reportes a tu forma de trabajar.</span></p>
+        </article>
+      </div>
+      <div class="cta center">
+        <a class="btn" id="contact" href="https://github.com/MalkSof/zman/issues/new?title=Services">
+          <span lang="en">Talk to us</span><span lang="es">Hablemos</span>
+        </a>
+      </div>
+    </section>
+
+    <section class="start">
+      <h2><span lang="en">Start in two commands</span><span lang="es">Empezá con dos comandos</span></h2>
+      <p class="section-lead"><span lang="en">With <a href="https://rustup.rs">Rust</a> installed, on Windows 10 or 11:</span><span lang="es">Con <a href="https://rustup.rs">Rust</a> instalado, en Windows 10 u 11:</span></p>
+      <pre><code>git clone https://github.com/MalkSof/zman
+cd zman
+cargo build --release
+./target/release/zman-app</code></pre>
+      <p class="small-note"><span lang="en">Early version, developed on Windows. macOS and Linux are not supported yet.</span><span lang="es">Versión temprana, desarrollada en Windows. macOS y Linux todavía no están soportados.</span></p>
+    </section>
+  </main>
+
+  <footer>
+    <span>zman · MIT</span>
+    <a href="https://github.com/MalkSof/zman">github.com/MalkSof/zman</a>
+  </footer>
+
+  <script>
+    const root = document.documentElement;
+    const frame = document.getElementById("demo-frame");
+    function setLang(lang) {
+      root.dataset.lang = lang;
+      root.lang = lang;
+      frame.src = "demo/index.html?lang=" + lang;
+      document.title = lang === "es"
+        ? "zman — sabé a dónde se va tu tiempo, y preguntáselo a Claude"
+        : "zman — know where your time goes, and ask Claude about it";
+      try { localStorage.setItem("zman-lang", lang); } catch {}
+    }
+    let saved = null;
+    try { saved = localStorage.getItem("zman-lang"); } catch {}
+    const asked = new URLSearchParams(location.search).get("lang");
+    const browser = (navigator.language || "").toLowerCase().startsWith("es") ? "es" : "en";
+    setLang(["en", "es"].includes(asked) ? asked : saved || browser);
+    document.getElementById("lang-toggle").addEventListener("click", () => {
+      setLang(root.dataset.lang === "es" ? "en" : "es");
+    });
+  </script>
+</body>
+</html>

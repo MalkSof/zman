@@ -30,12 +30,27 @@ enum Tracking {
     Failed(String),
 }
 
+/// The tray menu entries, kept so their text can follow the language.
+struct TrayItems {
+    open: MenuItem<Wry>,
+    pause: CheckMenuItem<Wry>,
+    quit: MenuItem<Wry>,
+}
+
 struct AppState {
     paths: Paths,
-    lang: Lang,
+    lang: Mutex<Lang>,
     control: Arc<Control>,
     tracking: Mutex<Tracking>,
-    pause_item: Mutex<Option<CheckMenuItem<Wry>>>,
+    tray: Mutex<Option<TrayItems>>,
+}
+
+fn tray_labels(lang: Lang) -> (&'static str, &'static str, &'static str) {
+    (
+        lang.pick("Open zman", "Abrir zman"),
+        lang.pick("Pause tracking", "Pausar el registro"),
+        lang.pick("Quit", "Salir"),
+    )
 }
 
 fn main() {
@@ -74,10 +89,10 @@ fn main() {
 
     let state = AppState {
         paths,
-        lang,
+        lang: Mutex::new(lang),
         control: Arc::new(Control::default()),
         tracking: Mutex::new(Tracking::Starting),
-        pause_item: Mutex::new(None),
+        tray: Mutex::new(None),
     };
 
     tauri::Builder::default()
@@ -89,6 +104,7 @@ fn main() {
             get_dashboard,
             set_autostart,
             set_paused,
+            set_language,
             get_connections,
             set_claude_desktop,
             sync_login,
@@ -123,19 +139,12 @@ fn show_window(app: &AppHandle) {
 }
 
 fn build_tray(app: &AppHandle) -> tauri::Result<()> {
-    let lang = app.state::<AppState>().lang;
-    let open = MenuItem::with_id(app, "open", lang.pick("Open zman", "Abrir zman"), true, None::<&str>)?;
-    let pause = CheckMenuItem::with_id(
-        app,
-        "pause",
-        lang.pick("Pause tracking", "Pausar el registro"),
-        true,
-        false,
-        None::<&str>,
-    )?;
-    let quit = MenuItem::with_id(app, "quit", lang.pick("Quit", "Salir"), true, None::<&str>)?;
+    let (open_label, pause_label, quit_label) = tray_labels(*app.state::<AppState>().lang.lock().unwrap());
+    let open = MenuItem::with_id(app, "open", open_label, true, None::<&str>)?;
+    let pause = CheckMenuItem::with_id(app, "pause", pause_label, true, false, None::<&str>)?;
+    let quit = MenuItem::with_id(app, "quit", quit_label, true, None::<&str>)?;
     let menu = Menu::with_items(app, &[&open, &pause, &PredefinedMenuItem::separator(app)?, &quit])?;
-    *app.state::<AppState>().pause_item.lock().unwrap() = Some(pause);
+    *app.state::<AppState>().tray.lock().unwrap() = Some(TrayItems { open, pause, quit });
 
     let mut tray = TrayIconBuilder::with_id("main")
         .tooltip("zman")
@@ -190,8 +199,8 @@ fn start_tracking(app: AppHandle) {
 fn apply_paused(app: &AppHandle, paused: bool) {
     let state = app.state::<AppState>();
     state.control.paused.store(paused, Ordering::SeqCst);
-    if let Some(item) = state.pause_item.lock().unwrap().as_ref() {
-        let _ = item.set_checked(paused);
+    if let Some(items) = state.tray.lock().unwrap().as_ref() {
+        let _ = items.pause.set_checked(paused);
     }
     let _ = app.emit("status-changed", ());
 }
@@ -209,6 +218,8 @@ fn status_json(app: &AppHandle) -> Value {
         "tracking": tracking,
         "error": error,
         "autostart": app.autolaunch().is_enabled().unwrap_or(false),
+        // "auto" while the app follows the system language.
+        "language": Lang::saved().map_or("auto", Lang::code),
         "db_path": state.paths.db_file.display().to_string(),
         "config_path": state.paths.config_file.display().to_string(),
     })
@@ -226,7 +237,8 @@ fn dashboard_json(paths: &Paths, lang: Lang, period: &str, date: Option<&str>) -
 
 #[tauri::command]
 fn get_dashboard(app: AppHandle, state: State<'_, AppState>, period: String, date: Option<String>) -> Result<Value, String> {
-    let mut data = dashboard_json(&state.paths, state.lang, &period, date.as_deref())?;
+    let lang = *state.lang.lock().unwrap();
+    let mut data = dashboard_json(&state.paths, lang, &period, date.as_deref())?;
     data["status"] = status_json(&app);
     Ok(data)
 }
@@ -235,6 +247,27 @@ fn get_dashboard(app: AppHandle, state: State<'_, AppState>, period: String, dat
 fn set_autostart(app: AppHandle, enabled: bool) -> Result<Value, String> {
     let autolaunch = app.autolaunch();
     if enabled { autolaunch.enable() } else { autolaunch.disable() }.map_err(|e| e.to_string())?;
+    Ok(status_json(&app))
+}
+
+/// Switches the language of the whole app: "en", "es", or "auto" to follow
+/// the system. The choice is saved and the CLI follows it too.
+#[tauri::command]
+fn set_language(app: AppHandle, state: State<'_, AppState>, language: String) -> Result<Value, String> {
+    let choice = match language.as_str() {
+        "en" => Some(Lang::En),
+        "es" => Some(Lang::Es),
+        _ => None,
+    };
+    Lang::save(choice).map_err(|e| e.to_string())?;
+    let lang = Lang::detect();
+    *state.lang.lock().unwrap() = lang;
+    if let Some(items) = state.tray.lock().unwrap().as_ref() {
+        let (open, pause, quit) = tray_labels(lang);
+        let _ = items.open.set_text(open);
+        let _ = items.pause.set_text(pause);
+        let _ = items.quit.set_text(quit);
+    }
     Ok(status_json(&app))
 }
 

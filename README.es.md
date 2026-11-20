@@ -8,6 +8,8 @@ tiempo, te muestra a dónde se va tu tiempo y deja que tu asistente de IA
 responda preguntas sobre eso. Tus datos quedan en tu máquina salvo que elijas
 sincronizarlos con tu propio servidor.
 
+Sitio web y demo en vivo: https://malksof.github.io/zman/
+
 > Estado: temprano. Desarrollado y probado en Windows. Ver
 > [qué está verificado](#qué-está-verificado).
 
