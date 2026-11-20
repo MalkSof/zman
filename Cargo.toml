@@ -1,6 +1,6 @@
 [workspace]
 resolver = "3"
-members = ["crates/core", "crates/daemon", "crates/cli", "crates/mcp"]
+members = ["crates/core", "crates/daemon", "crates/cli", "crates/mcp", "crates/desktop"]
 
 [workspace.package]
 version = "0.1.0"
@@ -10,6 +10,7 @@ repository = "https://github.com/MalkSof/zman"
 
 [workspace.dependencies]
 zman-core = { path = "crates/core" }
+zman-daemon = { path = "crates/daemon" }
 rusqlite = { version = "0.43", features = ["bundled"] }
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"

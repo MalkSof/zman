@@ -99,6 +99,19 @@ impl Categories {
             .map_or((self.uncategorized.as_str(), 0), |rule| (rule.name.as_str(), rule.score))
     }
 
+    /// Every category with its score, in rule order and without repeats,
+    /// ending with the uncategorized bucket.
+    pub fn list(&self) -> Vec<(&str, i8)> {
+        let mut list: Vec<(&str, i8)> = Vec::new();
+        for rule in &self.rules {
+            if !list.iter().any(|(name, _)| *name == rule.name) {
+                list.push((&rule.name, rule.score));
+            }
+        }
+        list.push((&self.uncategorized, 0));
+        list
+    }
+
     /// Built-in rules used when the config defines no categories.
     pub fn defaults(lang: Lang) -> Categories {
         let dev = lang.pick("Development", "Desarrollo");
@@ -275,6 +288,15 @@ mod tests {
         // The URL wins over a misleading title.
         let e = event("chrome.exe", "How to grow on YouTube - Google Chrome", Some("https://github.com/a/b"));
         assert_eq!(cats.classify(&e).0, "Development");
+    }
+
+    #[test]
+    fn list_keeps_rule_order_without_repeats() {
+        let cats = Categories::new(
+            vec![rule("B", 0, &["b"], &[], &[]), rule("A", 0, &["a"], &[], &[]), rule("B", 0, &["c"], &[], &[])],
+            Lang::En,
+        );
+        assert_eq!(cats.list(), vec![("B", 0), ("A", 0), ("Uncategorized", 0)]);
     }
 
     #[test]

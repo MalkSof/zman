@@ -1,0 +1,23 @@
+[package]
+name = "zman-desktop"
+description = "zman desktop app: tray icon, autostart and dashboard"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+
+[[bin]]
+name = "zman-app"
+path = "src/main.rs"
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+zman-core.workspace = true
+zman-daemon.workspace = true
+serde_json.workspace = true
+jiff.workspace = true
+tauri = { version = "2", features = ["tray-icon"] }
+tauri-plugin-autostart = "2"
+tauri-plugin-single-instance = "2"
