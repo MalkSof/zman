@@ -8,6 +8,7 @@ pub enum Error {
     Io(std::io::Error),
     Json(serde_json::Error),
     Config(String),
+    Time(jiff::Error),
 }
 
 impl fmt::Display for Error {
@@ -17,6 +18,7 @@ impl fmt::Display for Error {
             Error::Io(e) => write!(f, "I/O error: {e}"),
             Error::Json(e) => write!(f, "invalid JSON: {e}"),
             Error::Config(msg) => write!(f, "config error: {msg}"),
+            Error::Time(e) => write!(f, "date/time error: {e}"),
         }
     }
 }
@@ -32,6 +34,12 @@ impl From<rusqlite::Error> for Error {
 impl From<std::io::Error> for Error {
     fn from(e: std::io::Error) -> Self {
         Error::Io(e)
+    }
+}
+
+impl From<jiff::Error> for Error {
+    fn from(e: jiff::Error) -> Self {
+        Error::Time(e)
     }
 }
 

@@ -2,8 +2,10 @@ use std::path::Path;
 
 use serde::Deserialize;
 
+use crate::category::{Categories, CategoryRule};
 use crate::error::{Error, Result};
 use crate::glob;
+use crate::lang::Lang;
 
 /// User configuration, read from `config.toml`. Every field is optional in
 /// the file; missing ones take the defaults below.
@@ -15,6 +17,9 @@ pub struct Config {
     /// Seconds without keyboard/mouse input before the user counts as away.
     pub afk_threshold_secs: u64,
     pub exclude: Exclude,
+    /// Rules assigning apps and titles to categories, in priority order.
+    /// When empty, built-in rules are used.
+    pub categories: Vec<CategoryRule>,
 }
 
 /// Windows that must never be recorded. Patterns are case-insensitive and
@@ -34,6 +39,7 @@ impl Default for Config {
             poll_interval_secs: 1,
             afk_threshold_secs: 180,
             exclude: Exclude::default(),
+            categories: Vec::new(),
         }
     }
 }
@@ -70,7 +76,19 @@ impl Config {
         if config.afk_threshold_secs == 0 {
             return Err(Error::Config("afk_threshold_secs must be at least 1".into()));
         }
+        for rule in &config.categories {
+            rule.validate()?;
+        }
         Ok(config)
+    }
+
+    /// The category rules to apply: the user's, or the built-in defaults.
+    pub fn categories(&self, lang: Lang) -> Categories {
+        if self.categories.is_empty() {
+            Categories::defaults(lang)
+        } else {
+            Categories::new(self.categories.clone(), lang)
+        }
     }
 
     pub fn poll_interval_ms(&self) -> i64 {
@@ -126,6 +144,39 @@ mod tests {
         assert!(Config::parse("afk_treshold_secs = 60").is_err());
         assert!(Config::parse("poll_interval_secs = 0").is_err());
         assert!(Config::parse("afk_threshold_secs = 0").is_err());
+    }
+
+    #[test]
+    fn categories_from_file_replace_the_defaults() {
+        let config = Config::parse(
+            r#"
+            [[categories]]
+            name = "Deep work"
+            score = 2
+            apps = ["code.exe"]
+
+            [[categories]]
+            name = "Video"
+            score = -2
+            apps = ["chrome.exe"]
+            titles = ["*youtube*"]
+            "#,
+        )
+        .unwrap();
+        assert_eq!(config.categories.len(), 2);
+        assert_eq!(config.categories[1].titles, vec!["*youtube*"]);
+        assert_ne!(config.categories(Lang::En), Categories::defaults(Lang::En));
+        assert_eq!(Config::default().categories(Lang::En), Categories::defaults(Lang::En));
+    }
+
+    #[test]
+    fn invalid_categories_are_rejected() {
+        assert!(Config::parse("[[categories]]
+name = \"X\"
+score = 5
+apps = [\"a\"]").is_err());
+        assert!(Config::parse("[[categories]]
+name = \"X\"").is_err());
     }
 
     #[test]

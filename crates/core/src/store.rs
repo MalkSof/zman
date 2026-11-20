@@ -6,6 +6,7 @@ use ulid::Ulid;
 
 use crate::error::Result;
 use crate::event::Event;
+use crate::period::Range;
 
 const SCHEMA: &str = "
 CREATE TABLE IF NOT EXISTS meta (
@@ -111,6 +112,21 @@ impl Store {
         Ok(events)
     }
 
+    /// Events that overlap `range`, oldest first. Events are returned whole;
+    /// callers clip them to the range.
+    pub fn events_between(&self, range: Range) -> Result<Vec<Event>> {
+        let sql = format!(
+            "SELECT {EVENT_COLUMNS} FROM events
+             WHERE start_ms < ?2 AND start_ms + duration_ms > ?1
+             ORDER BY start_ms, id"
+        );
+        let mut stmt = self.conn.prepare(&sql)?;
+        let events = stmt
+            .query_map(params![range.start_ms, range.end_ms], read_event)?
+            .collect::<rusqlite::Result<Vec<Event>>>()?;
+        Ok(events)
+    }
+
     pub fn count_events(&self) -> Result<u64> {
         let count: i64 = self.conn.query_row("SELECT COUNT(*) FROM events", [], |row| row.get(0))?;
         Ok(count as u64)
@@ -187,6 +203,24 @@ mod tests {
         }
         let ids: Vec<String> = store.recent_events(2).unwrap().into_iter().map(|e| e.id).collect();
         assert_eq!(ids, vec!["B", "C"]);
+    }
+
+    #[test]
+    fn events_between_returns_overlapping_events() {
+        let store = Store::open_in_memory().unwrap();
+        // Each lasts 1000 ms.
+        for (id, start) in [("A", 0), ("B", 1500), ("C", 3000)] {
+            store.insert_event(&event(id, start)).unwrap();
+        }
+        let ids = |start_ms, end_ms| -> Vec<String> {
+            let range = Range { start_ms, end_ms };
+            store.events_between(range).unwrap().into_iter().map(|e| e.id).collect()
+        };
+        assert_eq!(ids(0, 5000), vec!["A", "B", "C"]);
+        assert_eq!(ids(900, 1600), vec!["A", "B"]);
+        // Touching the boundary is not overlapping.
+        assert_eq!(ids(1000, 1500), Vec::<String>::new());
+        assert_eq!(ids(2500, 3000), Vec::<String>::new());
     }
 
     #[test]

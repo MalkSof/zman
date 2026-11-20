@@ -15,7 +15,18 @@ pub struct Paths {
 }
 
 impl Paths {
+    /// Standard per-user locations, or everything under `ZMAN_HOME` when
+    /// that environment variable is set (portable installs, demos, tests).
     pub fn resolve() -> Result<Paths> {
+        if let Some(home) = std::env::var_os("ZMAN_HOME").filter(|v| !v.is_empty()) {
+            let home = PathBuf::from(home);
+            return Ok(Paths {
+                config_file: home.join("config.toml"),
+                db_file: home.join("zman.db"),
+                lock_file: home.join("daemon.lock"),
+                data_dir: home,
+            });
+        }
         let dirs = ProjectDirs::from("", "", "zman")
             .ok_or_else(|| Error::Config("could not find the user's home directory".into()))?;
         let data_dir = dirs.data_local_dir().to_path_buf();
