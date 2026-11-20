@@ -219,9 +219,43 @@ main { max-width: 1240px; margin: 0 auto; padding: 20px 24px 32px; display: grid
 .tooltip-row { display: flex; align-items: center; gap: 7px; color: var(--ink-2); padding: 1.5px 0; }
 .tooltip-row span:last-child { margin-left: auto; padding-left: 14px; font-variant-numeric: tabular-nums; color: var(--ink); }
 
+/* ---------- Connect dialog ---------- */
+
+.connect-btn { display: flex; align-items: center; gap: 7px; padding: 5px 12px 5px 10px; border: 0; border-radius: 999px; background: var(--accent); color: #fff; font-weight: 550; font-size: 13px; cursor: pointer; }
+.connect-btn:hover { filter: brightness(1.08); }
+.primary-btn { border: 0; border-radius: 8px; padding: 7px 14px; background: var(--accent); color: #fff; font-weight: 550; cursor: pointer; white-space: nowrap; }
+.primary-btn:hover { filter: brightness(1.08); }
+.primary-btn.is-on { background: var(--surface-2); color: var(--ink); }
+button:disabled { opacity: 0.55; cursor: default; }
+
+dialog { width: min(560px, calc(100vw - 32px)); max-height: calc(100vh - 48px); padding: 22px; border: 1px solid var(--border); border-radius: 16px; background: var(--surface); color: var(--ink); box-shadow: 0 24px 64px rgba(0, 0, 0, 0.3); }
+dialog::backdrop { background: rgba(0, 0, 0, 0.45); }
+.dialog-head { display: flex; justify-content: space-between; gap: 16px; margin-bottom: 6px; }
+.dialog-head h2 { font-size: 18px; font-weight: 620; }
+.dialog-head p { color: var(--ink-2); margin-top: 4px; }
+.conn { padding: 16px 0; border-top: 1px solid var(--border); margin-top: 14px; }
+.conn + .conn { margin-top: 0; }
+.conn-head { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+.conn h3 { margin: 0; font-size: 14.5px; font-weight: 600; }
+.conn p { color: var(--muted); font-size: 13px; margin-top: 2px; }
+.conn .ghost-btn { margin-left: 0; }
+.copy-row { display: flex; align-items: center; gap: 8px; margin-top: 10px; }
+.copy-row code { flex: 1; min-width: 0; padding: 8px 10px; border-radius: 8px; background: var(--surface-2); font: 12px/1.4 ui-monospace, "Cascadia Mono", Consolas, monospace; word-break: break-all; user-select: text; cursor: text; }
+#sync-form { display: grid; gap: 10px; margin-top: 12px; }
+#sync-form label { display: grid; gap: 4px; font-size: 12.5px; color: var(--muted); }
+#sync-form input { width: 100%; padding: 8px 10px; border: 1px solid var(--border); border-radius: 8px; background: transparent; color: var(--ink); font: inherit; user-select: text; cursor: text; }
+#sync-form input:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
+.form-pair { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.form-actions { display: flex; gap: 8px; margin-top: 12px; }
+.conn-ok { display: flex; align-items: center; gap: 8px; color: var(--ink) !important; margin-top: 10px !important; }
+.conn-ok::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--good); flex: none; }
+.steps { margin: 12px 0 0; padding-left: 20px; color: var(--ink-2); font-size: 13px; display: grid; gap: 3px; }
+.conn-error { margin-top: 12px; padding: 9px 12px; border-radius: 8px; background: color-mix(in srgb, var(--bad-text) 12%, transparent); color: var(--bad-text); font-size: 13px; }
+
 @media (max-width: 980px) {
   .tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .columns { grid-template-columns: minmax(0, 1fr); }
-  .status span:last-child { display: none; }
+  .status span:last-child, .connect-btn span { display: none; }
+  .connect-btn { padding: 7px; }
   .status { padding: 6px; }
 }

@@ -27,6 +27,23 @@ const TEXT = {
     emptyPast: "There is no activity recorded for these dates.",
     running: "Tracking", paused: "Paused", external: "Tracking (daemon)", stopped: "Not tracking",
     points: "pts",
+    connect: "Connect", close: "Close", copy: "Copy", copied: "Copied",
+    connectTitle: "Connect your AI assistant",
+    connectLead: "Ask about your time in plain language. Assistants only receive totals, never window titles.",
+    claudeConnect: "Connect", claudeConnected: "Connected · Disconnect",
+    claudeReady: "One click. Restart Claude Desktop afterwards.",
+    claudeDone: "Connected. Restart Claude Desktop to see the zman tools.",
+    claudeMissing: "Claude Desktop is not installed on this computer.",
+    claudeCodeNote: "Run this once in a terminal.",
+    remoteTitle: "ChatGPT, Claude on the web and your other devices",
+    remoteNote: "Sign in to a zman server to sync this device and get a link any assistant can use.",
+    server: "Server", email: "Email", password: "Password",
+    signIn: "Sign in", createAccount: "Create account", signOut: "Sign out", syncNow: "Sync now",
+    signedIn: (email, when) => `Signed in as ${email} · last sync ${when}`,
+    never: "never",
+    step1: "In ChatGPT or Claude, open Settings → Connectors and add a custom connector.",
+    step2: "Paste the address above.",
+    step3: "Sign in with this same email and password when asked.",
   },
   es: {
     day: "Día", week: "Semana", today: "Hoy", thisWeek: "Esta semana",
@@ -49,6 +66,23 @@ const TEXT = {
     emptyPast: "No hay actividad registrada en estas fechas.",
     running: "Registrando", paused: "En pausa", external: "Registrando (daemon)", stopped: "Sin registrar",
     points: "pts",
+    connect: "Conectar", close: "Cerrar", copy: "Copiar", copied: "Copiado",
+    connectTitle: "Conectá tu asistente de IA",
+    connectLead: "Preguntá por tu tiempo en lenguaje natural. Los asistentes solo reciben totales, nunca títulos de ventanas.",
+    claudeConnect: "Conectar", claudeConnected: "Conectado · Desconectar",
+    claudeReady: "Un clic. Después reiniciá Claude Desktop.",
+    claudeDone: "Conectado. Reiniciá Claude Desktop para ver las herramientas de zman.",
+    claudeMissing: "Claude Desktop no está instalado en esta computadora.",
+    claudeCodeNote: "Ejecutá esto una vez en una terminal.",
+    remoteTitle: "ChatGPT, Claude en la web y tus otros dispositivos",
+    remoteNote: "Iniciá sesión en un servidor zman para sincronizar este dispositivo y obtener un enlace que sirve en cualquier asistente.",
+    server: "Servidor", email: "Email", password: "Contraseña",
+    signIn: "Iniciar sesión", createAccount: "Crear cuenta", signOut: "Cerrar sesión", syncNow: "Sincronizar ahora",
+    signedIn: (email, when) => `Sesión iniciada como ${email} · último sync ${when}`,
+    never: "nunca",
+    step1: "En ChatGPT o Claude, abrí Ajustes → Conectores y agregá un conector personalizado.",
+    step2: "Pegá la dirección de arriba.",
+    step3: "Iniciá sesión con este mismo email y contraseña cuando te lo pida.",
   },
 };
 
@@ -351,6 +385,79 @@ $("autostart").addEventListener("change", async (event) => {
 $("paused").addEventListener("change", async (event) => {
   renderStatus(await invoke("set_paused", { paused: event.target.checked }));
 });
+
+// ---------- Connect dialog ----------
+
+const dialog = $("connect-dialog");
+
+function renderConnections(c) {
+  const claude = c.claude_desktop;
+  const toggle = $("claude-toggle");
+  toggle.disabled = !claude.installed;
+  toggle.textContent = claude.connected ? t.claudeConnected : t.claudeConnect;
+  toggle.classList.toggle("is-on", claude.connected);
+  toggle.dataset.connected = String(claude.connected);
+  $("claude-note").textContent = !claude.installed ? t.claudeMissing : claude.connected ? t.claudeDone : t.claudeReady;
+  $("claude-code-command").textContent = c.claude_code_command;
+
+  $("sync-form").hidden = Boolean(c.sync);
+  $("sync-account").hidden = !c.sync;
+  if (c.sync) {
+    const when = c.sync.last_sync_ms
+      ? new Date(c.sync.last_sync_ms).toLocaleString(state.data.lang, { dateStyle: "medium", timeStyle: "short" })
+      : t.never;
+    $("sync-summary").textContent = t.signedIn(c.sync.email, when);
+    $("mcp-url").textContent = c.sync.mcp_url;
+  }
+}
+
+// Runs a connection command, showing its error (if any) inside the dialog.
+async function connectionCommand(command, args, button) {
+  const error = $("connect-error");
+  error.hidden = true;
+  if (button) button.disabled = true;
+  try {
+    renderConnections(await invoke(command, args));
+  } catch (problem) {
+    error.textContent = String(problem);
+    error.hidden = false;
+  } finally {
+    if (button) button.disabled = false;
+  }
+}
+
+$("connect-btn").addEventListener("click", async () => {
+  $("connect-error").hidden = true;
+  dialog.showModal();
+  await connectionCommand("get_connections", {});
+});
+$("connect-close").addEventListener("click", () => dialog.close());
+dialog.addEventListener("click", (event) => { if (event.target === dialog) dialog.close(); });
+
+$("claude-toggle").addEventListener("click", (event) => {
+  const connected = event.currentTarget.dataset.connected !== "true";
+  connectionCommand("set_claude_desktop", { connected }, event.currentTarget);
+});
+$("sync-form").addEventListener("submit", (event) => {
+  event.preventDefault();
+  const args = {
+    server: $("sync-server").value,
+    email: $("sync-email").value,
+    password: $("sync-password").value,
+    register: event.submitter?.dataset.register === "true",
+  };
+  connectionCommand("sync_login", args, event.submitter).then(() => { $("sync-password").value = ""; });
+});
+$("sync-now").addEventListener("click", (event) => connectionCommand("sync_now", {}, event.currentTarget));
+$("sync-logout").addEventListener("click", (event) => connectionCommand("sync_logout", {}, event.currentTarget));
+
+for (const button of document.querySelectorAll("[data-copy]")) {
+  button.addEventListener("click", async () => {
+    await navigator.clipboard.writeText($(button.dataset.copy).textContent);
+    button.textContent = t.copied;
+    setTimeout(() => { button.textContent = t.copy; }, 1500);
+  });
+}
 
 // The current day or week keeps itself up to date while the window is open.
 setInterval(() => {

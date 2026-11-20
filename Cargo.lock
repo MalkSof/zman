@@ -6175,6 +6175,7 @@ dependencies = [
  "tauri-plugin-single-instance",
  "zman-core",
  "zman-daemon",
+ "zman-mcp",
 ]
 
 [[package]]

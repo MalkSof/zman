@@ -16,6 +16,7 @@ tauri-build = { version = "2", features = [] }
 [dependencies]
 zman-core.workspace = true
 zman-daemon.workspace = true
+zman-mcp.workspace = true
 serde_json.workspace = true
 jiff.workspace = true
 tauri = { version = "2", features = ["tray-icon"] }

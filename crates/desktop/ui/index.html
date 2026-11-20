@@ -35,6 +35,10 @@
     </nav>
 
     <div class="topbar-right">
+      <button class="connect-btn" id="connect-btn">
+        <svg viewBox="0 0 16 16" width="15" height="15" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M6.5 9.5 9.5 6.5"/><path d="M7.2 4.6 8.6 3.2a3 3 0 0 1 4.2 4.2L11.4 8.8"/><path d="M8.8 11.4 7.4 12.8a3 3 0 0 1-4.2-4.2L4.6 7.2"/></g></svg>
+        <span data-i18n="connect"></span>
+      </button>
       <div class="status" id="status"><span class="status-dot"></span><span id="status-text"></span></div>
       <div class="menu-wrap">
         <button class="icon-btn" id="settings-btn" data-i18n-title="settings" aria-haspopup="true" aria-expanded="false">
@@ -92,6 +96,66 @@
     <h2 id="empty-title"></h2>
     <p id="empty-text"></p>
   </div>
+
+  <dialog id="connect-dialog" aria-labelledby="connect-title">
+    <div class="dialog-head">
+      <div>
+        <h2 id="connect-title" data-i18n="connectTitle"></h2>
+        <p data-i18n="connectLead"></p>
+      </div>
+      <button class="icon-btn" id="connect-close" data-i18n-title="close">
+        <svg viewBox="0 0 16 16" width="16" height="16"><path d="m4 4 8 8M12 4l-8 8" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+      </button>
+    </div>
+
+    <section class="conn">
+      <div class="conn-head">
+        <div><h3>Claude Desktop</h3><p id="claude-note"></p></div>
+        <button class="primary-btn" id="claude-toggle"></button>
+      </div>
+    </section>
+
+    <section class="conn">
+      <div class="conn-head">
+        <div><h3>Claude Code</h3><p data-i18n="claudeCodeNote"></p></div>
+      </div>
+      <div class="copy-row"><code id="claude-code-command"></code><button class="ghost-btn" data-copy="claude-code-command" data-i18n="copy"></button></div>
+    </section>
+
+    <section class="conn">
+      <div class="conn-head">
+        <div><h3 data-i18n="remoteTitle"></h3><p data-i18n="remoteNote"></p></div>
+      </div>
+
+      <form id="sync-form" autocomplete="on">
+        <label><span data-i18n="server"></span><input id="sync-server" type="text" placeholder="https://zman.example.com" required></label>
+        <div class="form-pair">
+          <label><span data-i18n="email"></span><input id="sync-email" type="email" autocomplete="username" required></label>
+          <label><span data-i18n="password"></span><input id="sync-password" type="password" autocomplete="current-password" minlength="8" required></label>
+        </div>
+        <div class="form-actions">
+          <button class="primary-btn" type="submit" data-register="false" data-i18n="signIn"></button>
+          <button class="ghost-btn" type="submit" data-register="true" data-i18n="createAccount"></button>
+        </div>
+      </form>
+
+      <div id="sync-account" hidden>
+        <p class="conn-ok" id="sync-summary"></p>
+        <div class="copy-row"><code id="mcp-url"></code><button class="ghost-btn" data-copy="mcp-url" data-i18n="copy"></button></div>
+        <ol class="steps">
+          <li data-i18n="step1"></li>
+          <li data-i18n="step2"></li>
+          <li data-i18n="step3"></li>
+        </ol>
+        <div class="form-actions">
+          <button class="ghost-btn" id="sync-now" data-i18n="syncNow"></button>
+          <button class="ghost-btn" id="sync-logout" data-i18n="signOut"></button>
+        </div>
+      </div>
+    </section>
+
+    <p class="conn-error" id="connect-error" hidden></p>
+  </dialog>
 
   <div class="tooltip" id="tooltip" hidden></div>
 

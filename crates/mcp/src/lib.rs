@@ -13,6 +13,37 @@ use jiff::tz::TimeZone;
 use serde_json::{Value, json};
 use zman_core::{Categories, Event, Range};
 
+/// Serves MCP over stdio on the local database until stdin closes: one
+/// JSON-RPC message per line in, one per line out. Nothing else may be
+/// written to stdout.
+pub fn serve_stdio() -> Result<(), Box<dyn std::error::Error>> {
+    use std::io::{BufRead, Write};
+
+    let paths = zman_core::Paths::resolve()?;
+    let config = zman_core::Config::load(&paths.config_file)?;
+    // Opening creates an empty database if nothing was tracked yet, so the
+    // tools answer "nothing tracked" instead of failing.
+    let store = zman_core::Store::open(&paths.db_file)?;
+    let server = Server {
+        source: &store,
+        categories: config.categories(zman_core::Lang::detect()),
+        default_tz: TimeZone::system(),
+    };
+
+    let mut stdout = std::io::stdout().lock();
+    for line in std::io::stdin().lock().lines() {
+        let line = line?;
+        if line.trim().is_empty() {
+            continue;
+        }
+        if let Some(reply) = server.handle_text(&line) {
+            writeln!(stdout, "{reply}")?;
+            stdout.flush()?;
+        }
+    }
+    Ok(())
+}
+
 /// Protocol revisions this server can speak, newest first.
 const PROTOCOL_VERSIONS: &[&str] = &["2025-11-25", "2025-06-18", "2025-03-26", "2024-11-05"];
 
