@@ -49,16 +49,47 @@ impl Context {
         }
     }
 
+    /// The category rules, including what the user changed from the app.
+    fn categories(&self) -> zman_core::Categories {
+        zman_core::Settings::load(&self.store).unwrap_or_default().categories(&self.config, self.lang)
+    }
+
     fn summary(&self, range: Range) -> Result<Summary, Box<dyn Error>> {
         let events = self.store.events_between(range)?;
-        Ok(report::summarize(&events, range, &self.config.categories(self.lang)))
+        Ok(report::summarize(&events, range, &self.categories()))
     }
 
     fn timeline(&self, edges: &[i64]) -> Result<Vec<Summary>, Box<dyn Error>> {
         let range = Range { start_ms: edges[0], end_ms: edges[edges.len() - 1] };
         let events = self.store.events_between(range)?;
-        Ok(report::timeline(&events, edges, &self.config.categories(self.lang)))
+        Ok(report::timeline(&events, edges, &self.categories()))
     }
+}
+
+pub fn export(
+    lang: Lang,
+    from: Option<&str>,
+    to: Option<&str>,
+    output: Option<&std::path::Path>,
+) -> Result<(), Box<dyn Error>> {
+    let ctx = Context::load(lang)?;
+    let first = ctx.date(from)?;
+    let last = match to {
+        Some(text) => period::parse_date(text)?,
+        None => first,
+    };
+    let days = (last - first).get_days() as i64 + 1;
+    if days < 1 {
+        return Err(lang.pick("--to is before --from", "--to es anterior a --from").into());
+    }
+    let events = ctx.store.events_between(period::days_range(first, days, &ctx.tz)?)?;
+    let csv = zman_core::export::csv(&events, &ctx.categories(), &ctx.tz);
+    match output {
+        // The byte order mark makes Excel read accents correctly.
+        Some(path) => std::fs::write(path, format!("\u{feff}{csv}"))?,
+        None => print!("{csv}"),
+    }
+    Ok(())
 }
 
 pub fn today(lang: Lang, date: Option<&str>) -> Result<(), Box<dyn Error>> {

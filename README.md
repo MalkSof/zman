@@ -17,11 +17,11 @@ Website and live demo: https://malksof.github.io/zman/
 
 | Piece | What it does |
 |---|---|
-| **Desktop app** (`zman-app`) | Tracks in the background, lives in the system tray, starts with the system, shows the dashboard and connects AI assistants |
-| **CLI** (`zman`) | `today`, `week`, `apps`, `watch`, `status`, `sync` |
+| **Desktop app** (`zman-app`) | Tracks in the background, lives in the system tray, starts with the system, shows the dashboard, blocks distracting sites and connects AI assistants |
+| **CLI** (`zman`) | `today`, `week`, `apps`, `export`, `watch`, `status`, `sync` |
 | **Daemon** (`zman-daemon`) | The tracker alone, for those who do not want the app |
-| **Local MCP server** (`zman-mcp`, or `zman-app --mcp`) | Read-only tools for Claude and other assistants on this computer |
-| **Browser extension** (`extension/`) | Adds the site of the active tab to your tracking |
+| **Local MCP server** (`zman-mcp`, or `zman-app --mcp`) | Tools for Claude and other assistants on this computer: read-only reports, plus focus sessions if you allow it |
+| **Browser extension** (`extension/`) | Adds the site of the active tab to your tracking, and blocks the sites zman tells it to |
 | **Sync server** (`zman-server`) | Collects all your devices; remote MCP with sign-in for ChatGPT and Claude on the web |
 | **Android app** (`android/`) | Adds your phone's app usage |
 
@@ -33,14 +33,21 @@ Website and live demo: https://malksof.github.io/zman/
 - Private browser windows are never reported. Query strings of URLs are never
   stored.
 - AI assistants only ever receive aggregates (time per category, app and
-  site). Window titles are never exposed through MCP.
+  site). Window titles are never exposed through MCP. The only thing an
+  assistant can change is starting or ending a focus session, and only after
+  you turn that on.
 - Nothing leaves your computer unless you sign in to a sync server, and you
   can keep window titles local even then.
 
 ## Quick start
 
-You need [Rust](https://rustup.rs). On Windows the app uses WebView2, which
-Windows 10 and 11 already include.
+**Windows installer**: download `zman_x.y.z_x64-setup.exe` from the
+[latest release](https://github.com/MalkSof/zman/releases/latest) and run it.
+The installer is not code-signed yet, so Windows SmartScreen will ask you to
+confirm ("More info" → "Run anyway").
+
+**From source**: you need [Rust](https://rustup.rs). On Windows the app uses
+WebView2, which Windows 10 and 11 already include.
 
 ```sh
 cargo build --release
@@ -59,6 +66,7 @@ zman week             # the week, day by day
 zman apps --week      # every app
 zman watch            # what is being recorded, live
 zman today --date 2026-11-19
+zman export --from 2026-11-01 --to 2026-11-30 -o november.csv
 ```
 
 Messages are shown in Spanish when the system language is Spanish, and in
@@ -80,7 +88,41 @@ Then ask things like *"how did I spend my week?"*, *"compare this week with
 the last one"* or *"when were my focus blocks yesterday?"*.
 
 Tools: `daily_summary`, `weekly_summary`, `time_by_category`, `time_by_app`,
-`compare_periods`, `focus_blocks`.
+`compare_periods`, `focus_blocks`. On your own computer there are also
+`start_focus` and `stop_focus`, which only work after you turn on **Let my AI
+assistant start focus sessions** in the Focus dialog. Then *"block my
+distractions for an hour"* just works.
+
+## Focus and blocking
+
+Press **Focus** in the app. Blocking happens in the browser, so it needs the
+[browser extension](#browser-extension).
+
+- **Focus session**: 25, 50 or 90 minutes during which distracting sites
+  (every site in a category with a negative score) are replaced by a
+  countdown.
+- **Daily limits**: minutes per day for a site (`youtube.com`) or for a whole
+  category (`Entertainment`). When they run out, it is blocked until
+  tomorrow.
+- **Focus hours**: distracting sites are blocked every week on the days and
+  hours you choose.
+- **Always blocked**: sites you never want to open.
+
+This is a tool for self-control: it can be turned off from the app, and it
+does not cover private windows or browsers without the extension. It is not
+a parental control.
+
+## Goals, notifications and categories
+
+- Set a **daily goal** of productive hours in the Focus dialog; the day view
+  shows your progress.
+- zman notifies you when you reach the goal, when a focus session ends, when
+  most of the last half hour went to distractions, and once a week with a
+  recap. One switch turns all of it off.
+- **Click any app or site** in the dashboard to move it to another category.
+  The change applies to your whole history, and to the CLI and AI assistants.
+- **Export this view as CSV** in the settings menu writes the events of the
+  day or week on screen to your Downloads folder.
 
 ## Browser extension
 
@@ -91,7 +133,7 @@ Without it, a browser counts as one app. With it, zman knows the site.
 3. **Load unpacked** and pick the `extension/` folder.
 
 The extension talks only to zman on `127.0.0.1`. Its popup shows whether zman
-is running.
+is running. The release page has it as `zman-extension.zip`.
 
 ## Configuration
 
@@ -197,8 +239,9 @@ ZMAN_HOME=./demo cargo run -p zman-cli -- week
 ## What has been verified
 
 - **Tested on Windows 11**: tracker, CLI, local MCP, desktop app, the browser
-  listener (with simulated requests) and the server on in-memory storage,
-  including the whole OAuth flow and remote MCP. `cargo test` covers the core
+  listener and the blocking decisions (with simulated requests from the
+  extension) and the server on in-memory storage, including the whole OAuth
+  flow and remote MCP. `cargo test` covers the core
   logic, the MCP tools and the server's HTTP API.
 - **Not yet run**: the server against a real Postgres, the Docker image, the
   browser extension inside a browser, the Android app (written without an

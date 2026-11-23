@@ -1,4 +1,5 @@
-//! A read-only Model Context Protocol server over zman data.
+//! A Model Context Protocol server over zman data. Read-only, except for
+//! starting and stopping focus sessions when the user has allowed it.
 //!
 //! The protocol layer here is transport-agnostic: [`Server::handle`] takes
 //! one JSON-RPC message and returns the reply, if any. The `zman-mcp` binary
@@ -24,10 +25,12 @@ pub fn serve_stdio() -> Result<(), Box<dyn std::error::Error>> {
     // Opening creates an empty database if nothing was tracked yet, so the
     // tools answer "nothing tracked" instead of failing.
     let store = zman_core::Store::open(&paths.db_file)?;
+    let settings = zman_core::Settings::load(&store)?;
     let server = Server {
         source: &store,
-        categories: config.categories(zman_core::Lang::detect()),
+        categories: settings.categories(&config, zman_core::Lang::detect()),
         default_tz: TimeZone::system(),
+        focus: Some(&store),
     };
 
     let mut stdout = std::io::stdout().lock();
@@ -50,6 +53,7 @@ const PROTOCOL_VERSIONS: &[&str] = &["2025-11-25", "2025-06-18", "2025-03-26", "
 const INSTRUCTIONS: &str = "zman is an automatic time tracker. These tools report how the user \
 spent their time on their devices: totals per category, app and website, a productivity score \
 from 0 to 100, and focus blocks. All data is aggregated; window titles are never exposed. \
+When start_focus is offered, use it to block distracting websites for a while if the user asks to focus. \
 Dates are YYYY-MM-DD in the user's time zone and ranges are inclusive.";
 
 /// Where the server reads events from.
@@ -64,8 +68,44 @@ impl EventSource for zman_core::Store {
     }
 }
 
+/// Starts and stops focus sessions (see `zman_core::settings::Block`).
+pub trait FocusControl {
+    /// Starts a session of `minutes` and returns when it ends, in
+    /// milliseconds since the Unix epoch.
+    fn start_focus(&self, minutes: u32) -> Result<i64, String>;
+    fn stop_focus(&self) -> Result<(), String>;
+}
+
+const FOCUS_NOT_ALLOWED: &str = "The user has not allowed assistants to control focus sessions. \
+They can turn it on in the zman app: Focus, then \"Let my AI assistant start focus sessions\".";
+
+impl FocusControl for zman_core::Store {
+    fn start_focus(&self, minutes: u32) -> Result<i64, String> {
+        let mut settings = zman_core::Settings::load(self).map_err(|e| e.to_string())?;
+        if !settings.assistant_focus {
+            return Err(FOCUS_NOT_ALLOWED.into());
+        }
+        let until_ms = zman_core::now_ms() + minutes as i64 * 60_000;
+        settings.block.focus_until_ms = until_ms;
+        settings.save(self).map_err(|e| e.to_string())?;
+        Ok(until_ms)
+    }
+
+    fn stop_focus(&self) -> Result<(), String> {
+        let mut settings = zman_core::Settings::load(self).map_err(|e| e.to_string())?;
+        if !settings.assistant_focus {
+            return Err(FOCUS_NOT_ALLOWED.into());
+        }
+        settings.block.focus_until_ms = 0;
+        settings.save(self).map_err(|e| e.to_string())
+    }
+}
+
 pub struct Server<'a> {
     pub source: &'a dyn EventSource,
+    /// Present only where focus sessions can be controlled: on the user's
+    /// own computer. Without it the server is strictly read-only.
+    pub focus: Option<&'a dyn FocusControl>,
     pub categories: Categories,
     /// Time zone used when a tool call does not name one.
     pub default_tz: TimeZone,
@@ -97,7 +137,7 @@ impl Server<'_> {
         let result = match method {
             "initialize" => Ok(initialize(&params)),
             "ping" => Ok(json!({})),
-            "tools/list" => Ok(json!({ "tools": tools::definitions() })),
+            "tools/list" => Ok(json!({ "tools": self.tool_definitions() })),
             "tools/call" => self.call_tool(&params),
             _ => Err((-32601, format!("Method not found: {method}"))),
         };
@@ -107,12 +147,22 @@ impl Server<'_> {
         })
     }
 
+    fn tool_definitions(&self) -> Value {
+        let mut list = tools::definitions();
+        if self.focus.is_some() {
+            if let (Some(list), Value::Array(extra)) = (list.as_array_mut(), tools::focus_definitions()) {
+                list.extend(extra);
+            }
+        }
+        list
+    }
+
     fn call_tool(&self, params: &Value) -> Result<Value, (i64, String)> {
         let name = params
             .get("name")
             .and_then(Value::as_str)
             .ok_or((-32602, "Missing tool name".to_string()))?;
-        if !tools::exists(name) {
+        if !tools::exists(name, self.focus.is_some()) {
             return Err((-32602, format!("Unknown tool: {name}")));
         }
         let empty = json!({});
@@ -162,7 +212,7 @@ mod tests {
 
     fn store() -> Store {
         let store = Store::open_in_memory().unwrap();
-        let mut add = |app: &str, title: &str, url: &str, start_min: i64, minutes: i64| {
+        let add = |app: &str, title: &str, url: &str, start_min: i64, minutes: i64| {
             let start_ms = DAY + start_min * MIN;
             store
                 .insert_event(&Event {
@@ -187,7 +237,7 @@ mod tests {
     }
 
     fn server(store: &Store) -> Server<'_> {
-        Server { source: store, categories: Categories::defaults(Lang::En), default_tz: TimeZone::UTC }
+        Server { source: store, categories: Categories::defaults(Lang::En), default_tz: TimeZone::UTC, focus: None }
     }
 
     fn call(server: &Server<'_>, name: &str, args: Value) -> (Value, bool) {
@@ -247,6 +297,41 @@ mod tests {
             assert_eq!(tool["annotations"]["readOnlyHint"], true);
             assert_eq!(tool["inputSchema"]["type"], "object");
         }
+    }
+
+    #[test]
+    fn focus_tools_need_the_users_permission() {
+        let store = store();
+        let server = Server { focus: Some(&store), ..server(&store) };
+        let reply = server.handle(&json!({"jsonrpc": "2.0", "id": 1, "method": "tools/list"})).unwrap();
+        let tools = reply["result"]["tools"].as_array().unwrap();
+        assert_eq!(tools.len(), 8);
+        assert_eq!(tools[6]["name"], "start_focus");
+        assert_eq!(tools[6]["annotations"]["readOnlyHint"], false);
+
+        // Off by default: the assistant is told how the user can allow it.
+        let (message, is_error) = call(&server, "start_focus", json!({"minutes": 25}));
+        assert!(is_error);
+        assert!(message.as_str().unwrap().contains("not allowed"));
+        assert_eq!(zman_core::Settings::load(&store).unwrap().block.focus_until_ms, 0);
+
+        let mut settings = zman_core::Settings::load(&store).unwrap();
+        settings.assistant_focus = true;
+        settings.save(&store).unwrap();
+        let (data, is_error) = call(&server, "start_focus", json!({"minutes": 25}));
+        assert!(!is_error);
+        assert_eq!(data["minutes"], 25);
+        assert!(zman_core::Settings::load(&store).unwrap().block.focus_active(zman_core::now_ms()));
+        assert!(call(&server, "start_focus", json!({"minutes": 1})).1);
+
+        assert!(!call(&server, "stop_focus", json!({})).1);
+        assert_eq!(zman_core::Settings::load(&store).unwrap().block.focus_until_ms, 0);
+
+        // A server without focus control (the remote one) does not know the tools.
+        let reply = self::server(&store)
+            .handle(&json!({"jsonrpc": "2.0", "id": 1, "method": "tools/call", "params": {"name": "start_focus"}}))
+            .unwrap();
+        assert_eq!(reply["error"]["code"], -32602);
     }
 
     #[test]

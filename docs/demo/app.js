@@ -45,6 +45,33 @@ const TEXT = {
     step1: "In ChatGPT or Claude, open Settings → Connectors and add a custom connector.",
     step2: "Paste the address above.",
     step3: "Sign in with this same email and password when asked.",
+    focusBtn: "Focus", close2: "Close",
+    focusTitle: "Focus and blocking",
+    focusLead: "Keep distracting sites away while you work.",
+    sessionTitle: "Focus session",
+    sessionNote: "Blocks distracting sites (entertainment, social media) until the time is up.",
+    endSession: "End session",
+    focusEnds: (time) => `Distracting sites are blocked until ${time}.`,
+    limitsTitle: "Daily limits",
+    limitsNote: "A site or a whole category is blocked for the rest of the day once its time runs out.",
+    minPerDay: "min per day", add: "Add", remove: "Remove",
+    limitRow: (minutes) => `${minutes} min per day`,
+    hoursTitle: "Focus hours",
+    hoursNote: "Distracting sites are blocked every week at these hours.",
+    dayLetters: ["M", "T", "W", "T", "F", "S", "S"],
+    dayNames: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
+    sitesTitle: "Always blocked",
+    sitesNote: "Sites you never want to open on this computer.",
+    goalTitle: "Daily goal",
+    goalNote: "Hours of productive time you want to reach each day. 0 turns it off.",
+    hoursPerDay: "hours per day",
+    notifications: "Notify me about goals, long distractions and my weekly recap",
+    assistantFocus: "Let my AI assistant start focus sessions",
+    extensionNote: "Blocking works in browsers that have the zman extension installed.",
+    goal: "Daily goal", goalDone: "Goal reached", goalLeft: (left) => `${left} to go`,
+    productiveToday: "of productive time",
+    moveTo: (name) => `${name} goes to`, automatic: "Automatic",
+    exportCsv: "Export this view as CSV", exported: (path) => `Saved to ${path}`,
   },
   es: {
     day: "Día", week: "Semana", today: "Hoy", thisWeek: "Esta semana",
@@ -85,6 +112,33 @@ const TEXT = {
     step1: "En ChatGPT o Claude, abrí Ajustes → Conectores y agregá un conector personalizado.",
     step2: "Pegá la dirección de arriba.",
     step3: "Iniciá sesión con este mismo email y contraseña cuando te lo pida.",
+    focusBtn: "Foco", close2: "Cerrar",
+    focusTitle: "Foco y bloqueo",
+    focusLead: "Mantené lejos los sitios que distraen mientras trabajás.",
+    sessionTitle: "Sesión de foco",
+    sessionNote: "Bloquea los sitios que distraen (entretenimiento, redes sociales) hasta que termine el tiempo.",
+    endSession: "Terminar sesión",
+    focusEnds: (time) => `Los sitios que distraen están bloqueados hasta las ${time}.`,
+    limitsTitle: "Límites diarios",
+    limitsNote: "Un sitio o una categoría entera se bloquea por el resto del día cuando se le acaba el tiempo.",
+    minPerDay: "min por día", add: "Agregar", remove: "Quitar",
+    limitRow: (minutes) => `${minutes} min por día`,
+    hoursTitle: "Horario de foco",
+    hoursNote: "Los sitios que distraen se bloquean todas las semanas en estos horarios.",
+    dayLetters: ["L", "M", "M", "J", "V", "S", "D"],
+    dayNames: ["Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom"],
+    sitesTitle: "Siempre bloqueados",
+    sitesNote: "Sitios que no querés abrir nunca en esta computadora.",
+    goalTitle: "Meta diaria",
+    goalNote: "Horas de tiempo productivo que querés alcanzar por día. Con 0 se apaga.",
+    hoursPerDay: "horas por día",
+    notifications: "Avisarme de metas, distracciones largas y mi resumen semanal",
+    assistantFocus: "Dejar que mi asistente de IA inicie sesiones de foco",
+    extensionNote: "El bloqueo funciona en los navegadores que tienen instalada la extensión de zman.",
+    goal: "Meta diaria", goalDone: "Meta cumplida", goalLeft: (left) => `faltan ${left}`,
+    productiveToday: "de tiempo productivo",
+    moveTo: (name) => `${name} va a`, automatic: "Automática",
+    exportCsv: "Exportar esta vista a CSV", exported: (path) => `Guardado en ${path}`,
   },
 };
 
@@ -132,6 +186,7 @@ function render(data) {
   $("go-today").hidden = data.is_current;
   $("go-today").textContent = data.period === "day" ? t.today : t.thisWeek;
   renderStatus(data.status);
+  renderFocusButton();
 
   const empty = data.total_ms === 0;
   $("app").hidden = empty;
@@ -144,8 +199,8 @@ function render(data) {
   renderTiles(data);
   renderChart(data);
   renderList("categories", data.categories.map((c) => ({ name: c.name, ms: c.ms, color: colorOf(c.name) })), data.total_ms);
-  renderList("apps", data.apps.map((a) => ({ name: a.name, note: a.category, ms: a.ms, color: colorOf(a.category) })), data.total_ms);
-  renderList("sites", data.sites.map((s) => ({ name: s.name, note: s.category, ms: s.ms, color: colorOf(s.category) })), data.total_ms, t.sitesHint);
+  renderList("apps", data.apps.map((a) => ({ kind: "app", id: a.id, name: a.name, note: a.category, ms: a.ms, color: colorOf(a.category) })), data.total_ms);
+  renderList("sites", data.sites.map((s) => ({ kind: "site", id: s.id, name: s.name, note: s.category, ms: s.ms, color: colorOf(s.category) })), data.total_ms, t.sitesHint);
 }
 
 function renderStatus(status) {
@@ -190,7 +245,7 @@ function renderTiles(d) {
       value: esc(duration(d.focus_ms)),
       note: esc(d.focus_blocks.length ? t.blocks(d.focus_blocks.length) : t.noFocus),
     },
-    {
+    goalTile(d) || {
       label: t.topCategory,
       value: `<span class="swatch" style="background:${colorOf(top.name)};margin-right:9px"></span>${esc(top.name)}`,
       note: `${share(top.ms, d.total_ms)} ${esc(t.ofTotal)} · ${esc(duration(top.ms))}`,
@@ -208,6 +263,19 @@ function renderTiles(d) {
       </div>`,
     )
     .join("");
+}
+
+// With a daily goal set, the day view shows progress towards it.
+function goalTile(d) {
+  if (!d.goal_minutes || d.period !== "day") return null;
+  const goal = d.goal_minutes * 60000;
+  const done = d.categories.filter((c) => c.score > 0).reduce((sum, c) => sum + c.ms, 0);
+  return {
+    label: t.goal,
+    value: `${esc(duration(done))}<small> / ${esc(duration(goal))}</small>`,
+    note: esc(done >= goal ? t.goalDone : `${t.goalLeft(duration(goal - done))} · ${t.productiveToday}`),
+    meter: Math.min(100, Math.round((done / goal) * 100)),
+  };
 }
 
 // Stacked columns: one per hour (day view) or per day (week view).
@@ -286,7 +354,7 @@ function renderList(id, rows, total, hint) {
     ? rows
         .map(
           (row) => `
-        <div class="row">
+        <div class="row"${row.kind && row.id ? ` data-kind="${row.kind}" data-id="${esc(row.id)}" data-name="${esc(row.name)}" data-category="${esc(row.note)}"` : ""}>
           <div class="row-name">
             <span class="swatch" style="background:${row.color}"></span>
             <b title="${esc(row.name)}">${esc(row.name)}</b>
@@ -466,6 +534,186 @@ for (const button of document.querySelectorAll("[data-copy]")) {
     setTimeout(() => { button.textContent = t.copy; }, 1500);
   });
 }
+
+// ---------- Focus and blocking ----------
+
+const focusDialog = $("focus-dialog");
+const pad = (n) => String(n).padStart(2, "0");
+const clockOf = (ms) => new Date(ms).toLocaleTimeString(state.data.lang, { hour: "2-digit", minute: "2-digit" });
+const minuteLabel = (min) => `${pad(Math.floor(min / 60))}:${pad(min % 60)}`;
+
+function countdown(until) {
+  const secs = Math.max(0, Math.ceil((until - Date.now()) / 1000));
+  const hours = Math.floor(secs / 3600);
+  return hours ? `${hours}:${pad(Math.floor(secs / 60) % 60)}:${pad(secs % 60)}` : `${Math.floor(secs / 60)}:${pad(secs % 60)}`;
+}
+
+// The button in the top bar and the clock in the dialog, once a second.
+function renderFocusButton() {
+  if (!state.data) return;
+  const until = state.data.focus_until_ms || 0;
+  const running = until > Date.now();
+  $("focus-btn").classList.toggle("is-on", running);
+  $("focus-label").textContent = running ? countdown(until) : t.focusBtn;
+  $("focus-idle").hidden = running;
+  $("focus-running").hidden = !running;
+  if (running) {
+    $("focus-clock").textContent = countdown(until);
+    $("focus-ends").textContent = t.focusEnds(clockOf(until));
+  } else if (until) {
+    // The session just ended.
+    state.data.focus_until_ms = 0;
+    load();
+  }
+}
+setInterval(renderFocusButton, 1000);
+
+const removeIcon = '<svg viewBox="0 0 16 16" width="13" height="13"><path d="m4 4 8 8M12 4l-8 8" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>';
+const ruleRow = (list, index, html) =>
+  `<div class="rule">${html}<button class="icon-btn" data-remove="${list}" data-index="${index}" title="${esc(t.remove)}">${removeIcon}</button></div>`;
+
+function renderFocus(reply) {
+  state.settings = reply.settings;
+  state.data.focus_until_ms = reply.settings.block.focus_until_ms > Date.now() ? reply.settings.block.focus_until_ms : 0;
+  state.data.goal_minutes = reply.settings.goal_minutes;
+  const block = reply.settings.block;
+
+  $("limit-list").innerHTML = block.limits
+    .map((limit, i) => ruleRow("limits", i, `<b>${esc(limit.target)}</b><span>${esc(t.limitRow(limit.minutes))}</span>`))
+    .join("");
+  $("limit-options").innerHTML = reply.categories
+    .filter((c) => c.score < 0)
+    .map((c) => `<option value="${esc(c.name)}">`)
+    .join("");
+  $("schedule-list").innerHTML = block.schedules
+    .map((s, i) => {
+      const days = s.days.length === 7 ? "" : `<span>${esc([...s.days].sort().map((d) => t.dayNames[d - 1]).join(" "))}</span>`;
+      return ruleRow("schedules", i, `<b>${minuteLabel(s.start_min)} – ${minuteLabel(s.end_min)}</b>${days}`);
+    })
+    .join("");
+  $("site-list").innerHTML = block.sites.map((site, i) => ruleRow("sites", i, `<b>${esc(site)}</b>`)).join("");
+
+  if (!$("schedule-days").children.length || $("schedule-days").dataset.lang !== state.data.lang) {
+    $("schedule-days").dataset.lang = state.data.lang;
+    $("schedule-days").innerHTML = t.dayLetters
+      .map((letter, i) => `<button type="button" data-day="${i + 1}" aria-pressed="${i < 5}" title="${t.dayNames[i]}">${letter}</button>`)
+      .join("");
+  }
+  if (document.activeElement !== $("goal-hours")) $("goal-hours").value = reply.settings.goal_minutes / 60;
+  $("notifications").checked = reply.settings.notifications;
+  $("assistant-focus").checked = reply.settings.assistant_focus;
+  renderFocusButton();
+}
+
+async function focusCommand(command, args) {
+  const error = $("focus-error");
+  error.hidden = true;
+  try {
+    renderFocus(await invoke(command, args));
+    if (command !== "get_settings") load();
+  } catch (problem) {
+    error.textContent = String(problem);
+    error.hidden = false;
+  }
+}
+const saveSettings = () => focusCommand("save_settings", { settings: state.settings });
+
+$("focus-btn").addEventListener("click", () => {
+  focusDialog.showModal();
+  focusCommand("get_settings", {});
+});
+$("focus-close").addEventListener("click", () => focusDialog.close());
+focusDialog.addEventListener("click", (event) => {
+  if (event.target === focusDialog) return focusDialog.close();
+  const remove = event.target.closest("[data-remove]");
+  if (remove && state.settings) {
+    state.settings.block[remove.dataset.remove].splice(Number(remove.dataset.index), 1);
+    saveSettings();
+  }
+});
+$("focus-start").addEventListener("click", (event) => {
+  const minutes = Number(event.target.dataset.minutes);
+  if (minutes) focusCommand("set_focus", { minutes });
+});
+$("focus-stop").addEventListener("click", () => focusCommand("set_focus", { minutes: 0 }));
+$("schedule-days").addEventListener("click", (event) => {
+  const day = event.target.closest("[data-day]");
+  if (day) day.setAttribute("aria-pressed", String(day.getAttribute("aria-pressed") !== "true"));
+});
+$("limit-form").addEventListener("submit", (event) => {
+  event.preventDefault();
+  state.settings.block.limits.push({ target: $("limit-target").value.trim(), minutes: Number($("limit-minutes").value) });
+  $("limit-target").value = "";
+  saveSettings();
+});
+$("schedule-form").addEventListener("submit", (event) => {
+  event.preventDefault();
+  const minutes = (id) => { const [h, m] = $(id).value.split(":").map(Number); return h * 60 + m; };
+  const days = [...$("schedule-days").querySelectorAll('[aria-pressed="true"]')].map((b) => Number(b.dataset.day));
+  state.settings.block.schedules.push({ days, start_min: minutes("schedule-start"), end_min: minutes("schedule-end") });
+  saveSettings();
+});
+$("site-form").addEventListener("submit", (event) => {
+  event.preventDefault();
+  state.settings.block.sites.push($("site-input").value.trim());
+  $("site-input").value = "";
+  saveSettings();
+});
+$("goal-hours").addEventListener("change", (event) => {
+  state.settings.goal_minutes = Math.round(Math.max(0, Number(event.target.value) || 0) * 60);
+  saveSettings();
+});
+$("notifications").addEventListener("change", (event) => { state.settings.notifications = event.target.checked; saveSettings(); });
+$("assistant-focus").addEventListener("change", (event) => { state.settings.assistant_focus = event.target.checked; saveSettings(); });
+
+// ---------- Moving an app or site to another category ----------
+
+const catMenu = $("cat-menu");
+
+function openCategoryMenu(row, event) {
+  const { kind, id, name, category } = row.dataset;
+  const options = state.data.category_order
+    .map((c) => `<button role="menuitemradio" aria-checked="${c === category}" data-category="${esc(c)}"><i class="swatch" style="background:${colorOf(c)}"></i>${esc(c)}</button>`)
+    .join("");
+  catMenu.innerHTML = `<h4>${esc(t.moveTo(name))}</h4>${options}<hr><button data-category="">${esc(t.automatic)}</button>`;
+  catMenu.dataset.kind = kind;
+  catMenu.dataset.id = id;
+  catMenu.hidden = false;
+  const box = catMenu.getBoundingClientRect();
+  catMenu.style.left = `${Math.max(8, Math.min(event.clientX, window.innerWidth - box.width - 8))}px`;
+  catMenu.style.top = `${Math.max(8, Math.min(event.clientY + 6, window.innerHeight - box.height - 8))}px`;
+}
+
+document.addEventListener("click", async (event) => {
+  const choice = event.target.closest("#cat-menu button");
+  if (choice) {
+    catMenu.hidden = true;
+    await invoke("set_category", { kind: catMenu.dataset.kind, name: catMenu.dataset.id, category: choice.dataset.category || null });
+    return load();
+  }
+  const row = event.target.closest(".row[data-kind]");
+  catMenu.hidden = true;
+  if (row) openCategoryMenu(row, event);
+});
+document.addEventListener("keydown", (event) => { if (event.key === "Escape") catMenu.hidden = true; });
+
+// ---------- Export ----------
+
+let toastTimer;
+function toast(text) {
+  $("toast").textContent = text;
+  $("toast").hidden = false;
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => { $("toast").hidden = true; }, 6000);
+}
+$("export-btn").addEventListener("click", async () => {
+  menu.hidden = true;
+  try {
+    toast(t.exported(await invoke("export_csv", { period: state.period, date: state.date })));
+  } catch (problem) {
+    toast(String(problem));
+  }
+});
 
 // The current day or week keeps itself up to date while the window is open.
 setInterval(() => {

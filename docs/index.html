@@ -61,7 +61,7 @@
         <ul class="ticks">
           <li><span lang="en"><b>One click.</b> Press Connect in the app and Claude Desktop has the zman tools.</span><span lang="es"><b>Un clic.</b> Tocás Conectar en la app y Claude Desktop ya tiene las herramientas de zman.</span></li>
           <li><span lang="en"><b>Only totals.</b> Claude gets time per category, app and site. Never window titles, never what you typed.</span><span lang="es"><b>Solo totales.</b> Claude recibe tiempo por categoría, app y sitio. Nunca títulos de ventana, nunca lo que escribiste.</span></li>
-          <li><span lang="en"><b>Read-only.</b> The assistant can look, compare and summarize. It cannot change or delete anything.</span><span lang="es"><b>Solo lectura.</b> El asistente puede mirar, comparar y resumir. No puede cambiar ni borrar nada.</span></li>
+          <li><span lang="en"><b>It can help you focus.</b> Say "block my distractions for an hour" and Claude starts a focus session. Only if you allow it; everything else is read-only.</span><span lang="es"><b>Te ayuda a concentrarte.</b> Decile "bloqueame las distracciones por una hora" y Claude inicia una sesión de foco. Solo si lo permitís; todo lo demás es de solo lectura.</span></li>
           <li><span lang="en"><b>ChatGPT too.</b> Run your own zman server and connect ChatGPT or Claude on the web by signing in.</span><span lang="es"><b>También ChatGPT.</b> Levantá tu propio servidor zman y conectá ChatGPT o Claude en la web iniciando sesión.</span></li>
         </ul>
       </div>
@@ -83,6 +83,14 @@
           <span lang="en">About 7 hours less tracked, and productivity went from 87 to 84. Development dropped 13% while communication grew 12%.</span>
           <span lang="es">Unas 7 horas menos registradas, y la productividad pasó de 87 a 84. Desarrollo bajó 13% mientras comunicación subió 12%.</span>
         </div>
+        <div class="bubble user">
+          <span lang="en">Block my distractions for 50 minutes.</span><span lang="es">Bloqueame las distracciones por 50 minutos.</span>
+        </div>
+        <div class="tool"><i></i>zman · start_focus</div>
+        <div class="bubble bot">
+          <span lang="en">Done. Focus mode is on until 16:20: YouTube, social media and the rest of your distracting sites are blocked.</span>
+          <span lang="es">Listo. El modo foco está activo hasta las 16:20: YouTube, redes sociales y el resto de tus sitios que distraen quedan bloqueados.</span>
+        </div>
         <p class="chat-note"><span lang="en">Illustrative example, using the demo data below.</span><span lang="es">Ejemplo ilustrativo, con los datos de la demo de abajo.</span></p>
       </div>
     </section>
@@ -90,8 +98,8 @@
     <section id="demo" class="demo">
       <h2><span lang="en">This is the app. Go ahead, click around.</span><span lang="es">Esta es la app. Dale, tocá lo que quieras.</span></h2>
       <p class="section-lead">
-        <span lang="en">The real dashboard running on made-up data. Switch between day and week, hover the chart, open Connect.</span>
-        <span lang="es">El dashboard real corriendo sobre datos inventados. Cambiá entre día y semana, pasá el mouse por el gráfico, abrí Conectar.</span>
+        <span lang="en">The real dashboard running on made-up data. Switch between day and week, hover the chart, open Focus, click an app to change its category.</span>
+        <span lang="es">El dashboard real corriendo sobre datos inventados. Cambiá entre día y semana, pasá el mouse por el gráfico, abrí Foco, tocá una app para cambiarle la categoría.</span>
       </p>
       <div class="window">
         <div class="window-bar"><i></i><i></i><i></i><span>zman</span></div>
@@ -108,7 +116,19 @@
         </article>
         <article>
           <h3><span lang="en">Categories and a score</span><span lang="es">Categorías y puntaje</span></h3>
-          <p><span lang="en">Apps and sites fall into categories with a productivity score from 0 to 100. Change a rule and your whole history follows.</span><span lang="es">Las apps y sitios caen en categorías con un puntaje de productividad de 0 a 100. Cambiás una regla y todo tu historial se actualiza.</span></p>
+          <p><span lang="en">Apps and sites fall into categories with a productivity score from 0 to 100. Click any app or site to move it, and your whole history follows.</span><span lang="es">Las apps y sitios caen en categorías con un puntaje de productividad de 0 a 100. Tocás cualquier app o sitio para moverlo, y todo tu historial se actualiza.</span></p>
+        </article>
+        <article>
+          <h3><span lang="en">Focus mode</span><span lang="es">Modo foco</span></h3>
+          <p><span lang="en">One click and distracting sites are blocked for 25, 50 or 90 minutes, with a countdown where the site used to be.</span><span lang="es">Un clic y los sitios que distraen quedan bloqueados por 25, 50 o 90 minutos, con una cuenta regresiva donde antes estaba el sitio.</span></p>
+        </article>
+        <article>
+          <h3><span lang="en">Daily limits and focus hours</span><span lang="es">Límites diarios y horarios</span></h3>
+          <p><span lang="en">"YouTube, 30 minutes a day." "No social media from 9 to 6." When the time runs out, the site is blocked until tomorrow.</span><span lang="es">"YouTube, 30 minutos por día." "Sin redes de 9 a 18." Cuando se acaba el tiempo, el sitio queda bloqueado hasta mañana.</span></p>
+        </article>
+        <article>
+          <h3><span lang="en">Goals and gentle nudges</span><span lang="es">Metas y avisos</span></h3>
+          <p><span lang="en">Set a daily goal of productive hours. zman tells you when you reach it, when you have drifted for a while, and how your week went.</span><span lang="es">Fijá una meta diaria de horas productivas. zman te avisa cuando la cumplís, cuando llevás un rato disperso y cómo fue tu semana.</span></p>
         </article>
         <article>
           <h3><span lang="en">Focus blocks</span><span lang="es">Bloques de foco</span></h3>
@@ -124,7 +144,7 @@
         </article>
         <article>
           <h3><span lang="en">A terminal, if you like</span><span lang="es">Una terminal, si preferís</span></h3>
-          <p><span lang="en"><code>zman today</code>, <code>zman week</code>, <code>zman apps</code>. The same reports, with bars and colors.</span><span lang="es"><code>zman today</code>, <code>zman week</code>, <code>zman apps</code>. Los mismos reportes, con barras y colores.</span></p>
+          <p><span lang="en"><code>zman today</code>, <code>zman week</code>, <code>zman export</code>. The same reports with bars and colors, and your data as CSV.</span><span lang="es"><code>zman today</code>, <code>zman week</code>, <code>zman export</code>. Los mismos reportes con barras y colores, y tus datos en CSV.</span></p>
         </article>
       </div>
     </section>
@@ -158,7 +178,7 @@
         <article>
           <p class="tag"><span lang="en">For families</span><span lang="es">Para familias</span></p>
           <h3><span lang="en">Know how your kids use the computer</span><span lang="es">Sabé cómo usan la compu tus hijos</span></h3>
-          <p><span lang="en">We set up zman on the family computers so you can see screen time by app and site, and ask about it from your phone. Limits and site filters are in development; tell us what you need.</span><span lang="es">Instalamos zman en las computadoras de la familia para que veas el tiempo de pantalla por app y sitio, y lo consultes desde tu teléfono. Los límites y filtros de sitios están en desarrollo; contanos qué necesitás.</span></p>
+          <p><span lang="en">We set up zman on the family computers so you can see screen time by app and site, and ask about it from your phone. Daily limits and site blocking already work in the browser; controls a child cannot switch off are in development. Tell us what you need.</span><span lang="es">Instalamos zman en las computadoras de la familia para que veas el tiempo de pantalla por app y sitio, y lo consultes desde tu teléfono. Los límites diarios y el bloqueo de sitios ya funcionan en el navegador; los controles que un chico no pueda desactivar están en desarrollo. Contanos qué necesitás.</span></p>
         </article>
         <article>
           <p class="tag"><span lang="en">Custom</span><span lang="es">A medida</span></p>

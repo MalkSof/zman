@@ -90,6 +90,17 @@ impl Categories {
         }
     }
 
+    /// The same rules with `first` taking priority over them.
+    pub fn with_first(mut self, mut first: Vec<CategoryRule>) -> Categories {
+        first.append(&mut self.rules);
+        self.rules = first;
+        self
+    }
+
+    pub fn rules(&self) -> &[CategoryRule] {
+        &self.rules
+    }
+
     /// Category name and productivity score for an event. Events no rule
     /// matches are "Uncategorized" with a neutral score.
     pub fn classify(&self, event: &Event) -> (&str, i8) {

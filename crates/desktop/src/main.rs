@@ -6,6 +6,7 @@
 
 mod connections;
 mod dashboard;
+mod nudges;
 
 use std::sync::atomic::Ordering;
 use std::sync::{Arc, Mutex};
@@ -16,7 +17,7 @@ use tauri::menu::{CheckMenuItem, Menu, MenuItem, PredefinedMenuItem};
 use tauri::tray::{MouseButton, MouseButtonState, TrayIconBuilder, TrayIconEvent};
 use tauri::{AppHandle, Emitter, Manager, State, WindowEvent, Wry};
 use tauri_plugin_autostart::{MacosLauncher, ManagerExt};
-use zman_core::{Config, Lang, Paths, Store};
+use zman_core::{Config, Lang, Paths, Settings, Store, now_ms, period};
 use zman_daemon::{Control, RunError, sync};
 
 /// Passed by the autostart entry so the app starts in the tray.
@@ -99,6 +100,7 @@ fn main() {
         // A second launch just brings the existing window forward.
         .plugin(tauri_plugin_single_instance::init(|app, _args, _cwd| show_window(app)))
         .plugin(tauri_plugin_autostart::init(MacosLauncher::LaunchAgent, Some(vec![HIDDEN_FLAG])))
+        .plugin(tauri_plugin_notification::init())
         .manage(state)
         .invoke_handler(tauri::generate_handler![
             get_dashboard,
@@ -109,11 +111,17 @@ fn main() {
             set_claude_desktop,
             sync_login,
             sync_logout,
-            sync_now
+            sync_now,
+            get_settings,
+            save_settings,
+            set_focus,
+            set_category,
+            export_csv
         ])
         .setup(|app| {
             build_tray(app.handle())?;
             start_tracking(app.handle().clone());
+            nudges::start(app.handle().clone());
             if !std::env::args().any(|a| a == HIDDEN_FLAG) {
                 show_window(app.handle());
             }
@@ -230,9 +238,114 @@ fn dashboard_json(paths: &Paths, lang: Lang, period: &str, date: Option<&str>) -
     // show up without restarting.
     let config = Config::load(&paths.config_file).map_err(|e| e.to_string())?;
     let store = Store::open(&paths.db_file).map_err(|e| e.to_string())?;
-    let categories = config.categories(lang);
+    let settings = Settings::load(&store).map_err(|e| e.to_string())?;
+    let categories = settings.categories(&config, lang);
     let view = dashboard::View { store: &store, categories: &categories, lang, tz: &TimeZone::system() };
-    view.build(period, date)
+    let mut data = view.build(period, date)?;
+    data["goal_minutes"] = json!(settings.goal_minutes);
+    data["focus_until_ms"] = json!(if settings.block.focus_active(now_ms()) { settings.block.focus_until_ms } else { 0 });
+    Ok(data)
+}
+
+// ---------- Focus, blocking, categories and export ----------
+
+fn open_store(state: &AppState) -> Result<Store, String> {
+    Store::open(&state.paths.db_file).map_err(|e| e.to_string())
+}
+
+/// The settings plus what the dialog needs to draw them.
+fn settings_json(state: &AppState, store: &Store) -> Result<Value, String> {
+    let settings = Settings::load(store).map_err(|e| e.to_string())?;
+    let config = Config::load(&state.paths.config_file).map_err(|e| e.to_string())?;
+    let categories = settings.categories(&config, *state.lang.lock().unwrap());
+    let names: Vec<Value> = categories.list().iter().map(|(name, score)| json!({ "name": name, "score": score })).collect();
+    Ok(json!({ "settings": settings, "categories": names, "now_ms": now_ms() }))
+}
+
+#[tauri::command(async)]
+fn get_settings(state: State<'_, AppState>) -> Result<Value, String> {
+    settings_json(&state, &open_store(&state)?)
+}
+
+/// Saves what the Focus dialog edits. The running focus session and the
+/// category overrides have their own commands and are left alone.
+#[tauri::command(async)]
+fn save_settings(state: State<'_, AppState>, settings: Settings) -> Result<Value, String> {
+    let store = open_store(&state)?;
+    let current = Settings::load(&store).map_err(|e| e.to_string())?;
+    let mut next = settings;
+    next.block.focus_until_ms = current.block.focus_until_ms;
+    next.overrides = current.overrides;
+    let clean = |list: &mut Vec<String>| {
+        for item in list.iter_mut() {
+            // People paste addresses: keep just the site.
+            *item = zman_core::event::domain_of(item.trim()).unwrap_or_default();
+        }
+        list.retain(|item| !item.is_empty());
+        list.dedup();
+    };
+    clean(&mut next.block.sites);
+    next.block.limits.retain(|limit| !limit.target.trim().is_empty() && limit.minutes > 0);
+    next.block.schedules.retain(|s| !s.days.is_empty() && s.start_min < s.end_min && s.end_min <= 24 * 60);
+    next.goal_minutes = next.goal_minutes.min(24 * 60);
+    next.save(&store).map_err(|e| e.to_string())?;
+    settings_json(&state, &store)
+}
+
+/// Starts a focus session of `minutes`, or ends the current one with 0.
+#[tauri::command(async)]
+fn set_focus(app: AppHandle, state: State<'_, AppState>, minutes: u32) -> Result<Value, String> {
+    let store = open_store(&state)?;
+    let mut settings = Settings::load(&store).map_err(|e| e.to_string())?;
+    settings.block.focus_until_ms = if minutes == 0 { 0 } else { now_ms() + minutes.min(480) as i64 * 60_000 };
+    settings.save(&store).map_err(|e| e.to_string())?;
+    let _ = app.emit("status-changed", ());
+    settings_json(&state, &store)
+}
+
+/// Moves an app or site to a category; `category: null` returns it to the rules.
+#[tauri::command(async)]
+fn set_category(state: State<'_, AppState>, kind: String, name: String, category: Option<String>) -> Result<(), String> {
+    if kind != "app" && kind != "site" {
+        return Err("kind must be \"app\" or \"site\"".into());
+    }
+    let store = open_store(&state)?;
+    let mut settings = Settings::load(&store).map_err(|e| e.to_string())?;
+    settings.set_override(&kind, &name, category.as_deref());
+    settings.save(&store).map_err(|e| e.to_string())
+}
+
+/// Writes the events of the day or week on screen to a CSV file in the
+/// Downloads folder and returns its path.
+#[tauri::command(async)]
+fn export_csv(state: State<'_, AppState>, period: String, date: Option<String>) -> Result<String, String> {
+    let text = |e: zman_core::Error| e.to_string();
+    let tz = TimeZone::system();
+    let day = match date.as_deref() {
+        Some(date) => period::parse_date(date).map_err(text)?,
+        None => period::today(&tz),
+    };
+    let (first, range) = if period == "week" {
+        let monday = period::week_start(day).map_err(text)?;
+        (monday, period::days_range(monday, 7, &tz).map_err(text)?)
+    } else {
+        (day, period::day_range(day, &tz).map_err(text)?)
+    };
+
+    let store = open_store(&state)?;
+    let config = Config::load(&state.paths.config_file).map_err(text)?;
+    let categories = Settings::load(&store).map_err(text)?.categories(&config, *state.lang.lock().unwrap());
+    let events = store.events_between(range).map_err(text)?;
+
+    let folder = directories::UserDirs::new()
+        .and_then(|dirs| dirs.download_dir().map(std::path::Path::to_path_buf))
+        .unwrap_or_else(|| state.paths.data_dir.clone());
+    let name = if period == "week" { format!("zman-week-{first}.csv") } else { format!("zman-{first}.csv") };
+    let path = folder.join(name);
+    // The byte order mark makes Excel read accents correctly.
+    let content = format!("\u{feff}{}",zman_core::export::csv(&events, &categories, &tz));
+    std::fs::write(&path, content).map_err(|e| e.to_string())?;
+    Ok(path.display().to_string())
 }
 
 #[tauri::command]

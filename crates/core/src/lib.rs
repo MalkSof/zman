@@ -5,11 +5,13 @@ pub mod category;
 pub mod config;
 pub mod error;
 pub mod event;
+pub mod export;
 pub mod glob;
 pub mod lang;
 pub mod paths;
 pub mod period;
 pub mod report;
+pub mod settings;
 pub mod store;
 pub mod tracker;
 
@@ -20,6 +22,7 @@ pub use event::Event;
 pub use lang::Lang;
 pub use paths::Paths;
 pub use period::Range;
+pub use settings::Settings;
 pub use store::Store;
 pub use tracker::{Tick, Tracker, WindowInfo};
 

@@ -26,8 +26,40 @@ const NAMES: &[&str] = &[
     "focus_blocks",
 ];
 
-pub fn exists(name: &str) -> bool {
-    NAMES.contains(&name)
+const FOCUS_NAMES: &[&str] = &["start_focus", "stop_focus"];
+
+pub fn exists(name: &str, with_focus: bool) -> bool {
+    NAMES.contains(&name) || (with_focus && FOCUS_NAMES.contains(&name))
+}
+
+/// The two tools that act instead of reporting. Only offered where zman
+/// runs on the user's own computer.
+pub fn focus_definitions() -> Value {
+    let annotations = json!({ "readOnlyHint": false, "destructiveHint": false, "idempotentHint": true, "openWorldHint": false });
+    json!([
+        {
+            "name": "start_focus",
+            "description": "Starts a focus session: for the given minutes, zman blocks distracting \
+                websites (entertainment, social media) in the user's browser. Use it when the user \
+                asks to focus or to block distractions. The user must have allowed assistants to \
+                do this in the zman app.",
+            "inputSchema": {
+                "type": "object",
+                "properties": { "minutes": {
+                    "type": "integer", "minimum": 5, "maximum": 480, "default": 50,
+                    "description": "Length of the session in minutes.",
+                } },
+                "required": [],
+            },
+            "annotations": annotations,
+        },
+        {
+            "name": "stop_focus",
+            "description": "Ends the current focus session, unblocking the websites it was blocking.",
+            "inputSchema": { "type": "object", "properties": {}, "required": [] },
+            "annotations": annotations,
+        },
+    ])
 }
 
 pub fn definitions() -> Value {
@@ -128,6 +160,8 @@ pub fn call(server: &Server<'_>, name: &str, args: &Value) -> Result<Value, Stri
         "time_by_app" => ctx.time_by_app(args),
         "compare_periods" => ctx.compare_periods(args),
         "focus_blocks" => ctx.focus_blocks(args),
+        "start_focus" => ctx.start_focus(args),
+        "stop_focus" => ctx.stop_focus(),
         _ => Err(format!("Unknown tool: {name}")),
     }
 }
@@ -138,6 +172,27 @@ struct Ctx<'a> {
 }
 
 impl Ctx<'_> {
+    fn start_focus(&self, args: &Value) -> Result<Value, String> {
+        let focus = self.server.focus.ok_or("Focus sessions are not available here.")?;
+        let minutes = args.get("minutes").and_then(Value::as_i64).unwrap_or(50);
+        if !(5..=480).contains(&minutes) {
+            return Err("minutes must be between 5 and 480".into());
+        }
+        let until_ms = focus.start_focus(minutes as u32)?;
+        Ok(json!({
+            "focus": "on",
+            "minutes": minutes,
+            "ends_at": self.local_time(until_ms),
+            "note": "Distracting websites are now blocked in browsers that have the zman extension.",
+        }))
+    }
+
+    fn stop_focus(&self) -> Result<Value, String> {
+        let focus = self.server.focus.ok_or("Focus sessions are not available here.")?;
+        focus.stop_focus()?;
+        Ok(json!({ "focus": "off" }))
+    }
+
     fn daily_summary(&self, args: &Value) -> Result<Value, String> {
         let date = optional_date(args, "date")?.unwrap_or_else(|| period::today(&self.tz));
         let range = period::day_range(date, &self.tz).map_err(err)?;

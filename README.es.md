@@ -17,11 +17,11 @@ Sitio web y demo en vivo: https://malksof.github.io/zman/
 
 | Pieza | Qué hace |
 |---|---|
-| **App de escritorio** (`zman-app`) | Registra en segundo plano, vive en la bandeja del sistema, inicia con el sistema, muestra el dashboard y conecta asistentes de IA |
-| **CLI** (`zman`) | `today`, `week`, `apps`, `watch`, `status`, `sync` |
+| **App de escritorio** (`zman-app`) | Registra en segundo plano, vive en la bandeja del sistema, inicia con el sistema, muestra el dashboard, bloquea los sitios que distraen y conecta asistentes de IA |
+| **CLI** (`zman`) | `today`, `week`, `apps`, `export`, `watch`, `status`, `sync` |
 | **Daemon** (`zman-daemon`) | Solo el tracker, para quien no quiera la app |
-| **Servidor MCP local** (`zman-mcp`, o `zman-app --mcp`) | Herramientas de solo lectura para Claude y otros asistentes en esta computadora |
-| **Extensión de navegador** (`extension/`) | Suma el sitio de la pestaña activa a tu registro |
+| **Servidor MCP local** (`zman-mcp`, o `zman-app --mcp`) | Herramientas para Claude y otros asistentes en esta computadora: reportes de solo lectura, y sesiones de foco si lo permitís |
+| **Extensión de navegador** (`extension/`) | Suma el sitio de la pestaña activa a tu registro, y bloquea los sitios que zman le indica |
 | **Servidor de sync** (`zman-server`) | Junta todos tus dispositivos; MCP remoto con inicio de sesión para ChatGPT y Claude en la web |
 | **App Android** (`android/`) | Suma el uso de apps de tu teléfono |
 
@@ -33,14 +33,21 @@ Sitio web y demo en vivo: https://malksof.github.io/zman/
 - Las ventanas privadas del navegador nunca se informan. Los parámetros de las
   URLs nunca se guardan.
 - Los asistentes de IA solo reciben datos agregados (tiempo por categoría, app
-  y sitio). Los títulos de ventana nunca se exponen por MCP.
+  y sitio). Los títulos de ventana nunca se exponen por MCP. Lo único que un
+  asistente puede cambiar es iniciar o terminar una sesión de foco, y solo
+  después de que lo actives.
 - Nada sale de tu computadora salvo que inicies sesión en un servidor de sync,
   y aun así podés dejar los títulos de ventana solo en tu equipo.
 
 ## Inicio rápido
 
-Necesitás [Rust](https://rustup.rs). En Windows la app usa WebView2, que
-Windows 10 y 11 ya traen.
+**Instalador para Windows**: descargá `zman_x.y.z_x64-setup.exe` de la
+[última versión](https://github.com/MalkSof/zman/releases/latest) y ejecutalo.
+El instalador todavía no está firmado, así que Windows SmartScreen te va a
+pedir confirmación ("Más información" → "Ejecutar de todas formas").
+
+**Desde el código**: necesitás [Rust](https://rustup.rs). En Windows la app
+usa WebView2, que Windows 10 y 11 ya traen.
 
 ```sh
 cargo build --release
@@ -58,6 +65,7 @@ zman week             # la semana, día por día
 zman apps --week      # todas las apps
 zman watch            # lo que se está registrando, en vivo
 zman today --date 2026-11-19
+zman export --from 2026-11-01 --to 2026-11-30 -o noviembre.csv
 ```
 
 Los mensajes salen en español si el sistema está en español, y en inglés en
@@ -80,7 +88,42 @@ Después preguntá cosas como *"¿en qué se me fue la semana?"*, *"compará est
 semana con la anterior"* o *"¿cuándo fueron mis bloques de foco ayer?"*.
 
 Herramientas: `daily_summary`, `weekly_summary`, `time_by_category`,
-`time_by_app`, `compare_periods`, `focus_blocks`.
+`time_by_app`, `compare_periods`, `focus_blocks`. En tu propia computadora
+están además `start_focus` y `stop_focus`, que solo funcionan después de
+activar **Dejar que mi asistente de IA inicie sesiones de foco** en el
+diálogo de Foco. Ahí *"bloqueame las distracciones por una hora"* funciona
+directo.
+
+## Foco y bloqueo
+
+Tocá **Foco** en la app. El bloqueo ocurre en el navegador, así que necesita
+la [extensión de navegador](#extensión-de-navegador).
+
+- **Sesión de foco**: 25, 50 o 90 minutos durante los cuales los sitios que
+  distraen (todos los de una categoría con puntaje negativo) se reemplazan
+  por una cuenta regresiva.
+- **Límites diarios**: minutos por día para un sitio (`youtube.com`) o para
+  una categoría entera (`Entretenimiento`). Cuando se acaban, queda bloqueado
+  hasta mañana.
+- **Horario de foco**: los sitios que distraen se bloquean todas las semanas
+  en los días y horas que elijas.
+- **Siempre bloqueados**: sitios que no querés abrir nunca.
+
+Es una herramienta de autocontrol: se puede apagar desde la app, y no cubre
+ventanas privadas ni navegadores sin la extensión. No es un control parental.
+
+## Metas, avisos y categorías
+
+- Fijá una **meta diaria** de horas productivas en el diálogo de Foco; la
+  vista del día muestra tu avance.
+- zman te avisa cuando cumplís la meta, cuando termina una sesión de foco,
+  cuando la mayor parte de la última media hora se fue en distracciones, y
+  una vez por semana con un resumen. Un solo interruptor apaga todo.
+- **Tocá cualquier app o sitio** del dashboard para moverlo a otra categoría.
+  El cambio se aplica a todo tu historial, y también al CLI y a los
+  asistentes de IA.
+- **Exportar esta vista a CSV**, en el menú de ajustes, guarda los eventos
+  del día o la semana en pantalla en tu carpeta de Descargas.
 
 ## Extensión de navegador
 
@@ -91,7 +134,7 @@ Sin ella, un navegador cuenta como una sola app. Con ella, zman sabe el sitio.
 3. **Cargar descomprimida** y elegí la carpeta `extension/`.
 
 La extensión solo habla con zman en `127.0.0.1`. Su popup muestra si zman está
-corriendo.
+corriendo. En la página de versiones está como `zman-extension.zip`.
 
 ## Configuración
 
@@ -198,8 +241,9 @@ ZMAN_HOME=./demo cargo run -p zman-cli -- week
 ## Qué está verificado
 
 - **Probado en Windows 11**: tracker, CLI, MCP local, app de escritorio, el
-  receptor del navegador (con pedidos simulados) y el servidor con
-  almacenamiento en memoria, incluyendo todo el flujo OAuth y el MCP remoto.
+  receptor del navegador y las decisiones de bloqueo (con pedidos simulados
+  de la extensión) y el servidor con almacenamiento en memoria, incluyendo
+  todo el flujo OAuth y el MCP remoto.
   `cargo test` cubre la lógica del core, las herramientas MCP y la API HTTP
   del servidor.
 - **Todavía sin correr**: el servidor contra un Postgres real, la imagen de

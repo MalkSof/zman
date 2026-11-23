@@ -163,10 +163,10 @@ impl View<'_> {
                 "name": c.name, "score": c.score, "ms": c.ms,
             })).collect::<Vec<_>>(),
             "apps": summary.apps.iter().take(LIST_LIMIT).map(|a| json!({
-                "name": display_app(&a.app), "category": a.category, "score": a.score, "ms": a.ms,
+                "id": a.app, "name": display_app(&a.app), "category": a.category, "score": a.score, "ms": a.ms,
             })).collect::<Vec<_>>(),
             "sites": summary.domains.iter().take(LIST_LIMIT).map(|d| json!({
-                "name": d.domain, "category": d.category, "score": d.score, "ms": d.ms,
+                "id": d.domain, "name": d.domain, "category": d.category, "score": d.score, "ms": d.ms,
             })).collect::<Vec<_>>(),
         }))
     }

@@ -62,7 +62,7 @@ pub fn run(paths: &Paths, config: Config, control: &Control, on_ready: impl FnOn
     // simply goes on without URLs.
     let active_tab = match config.browser.port {
         0 => None,
-        port => match browser::listen(port, config.browser.full_urls) {
+        port => match browser::listen(port, config.browser.full_urls, browser::checker(paths)) {
             Ok(active) => Some(active),
             Err(e) => {
                 eprintln!("zman: browser extension support is off (port {port}: {e})");

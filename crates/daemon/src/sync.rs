@@ -175,9 +175,12 @@ pub fn run(store: &Store, config: &Config) -> Result<Option<usize>, String> {
     let token = Some(account.token.as_str());
 
     // Lets the server answer in the user's time zone with their categories.
+    let own = zman_core::Settings::load(store).map_err(text)?;
+    let custom = !config.categories.is_empty() || !own.overrides.is_empty();
+    let rules = own.categories(config, zman_core::Lang::detect());
     let settings = json!({
         "timezone": TimeZone::system().iana_name(),
-        "categories": if config.categories.is_empty() { Value::Null } else { json!(config.categories) },
+        "categories": if custom { json!(rules.rules()) } else { Value::Null },
     });
     call("PUT", &format!("{}/api/settings", account.server), token, &settings)?;
 

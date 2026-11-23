@@ -4,6 +4,9 @@
 //! 127.0.0.1 every time the active tab changes. The tracker then attaches
 //! the URL to the event when the focused window shows that same tab.
 //!
+//! The reply says whether that tab must be blocked (focus session, daily
+//! limit, schedule or blocked site); the extension then covers the page.
+//!
 //! The HTTP handling is deliberately tiny: one short request per
 //! connection, no keep-alive, nothing but the two routes below.
 
@@ -13,8 +16,11 @@ use std::sync::{Arc, Mutex};
 use std::time::Duration;
 
 use serde_json::Value;
-use zman_core::WindowInfo;
 use zman_core::event::clean_url;
+use zman_core::period;
+use zman_core::report::summarize;
+use zman_core::settings::Verdict;
+use zman_core::{Config, Lang, Paths, Settings, Store, WindowInfo, now_ms};
 
 const MAX_REQUEST_BYTES: usize = 16 * 1024;
 
@@ -50,20 +56,46 @@ impl ActiveTab {
     }
 }
 
+/// Decides whether a page (URL, title) must be blocked.
+pub type Checker = Box<dyn Fn(&str, &str) -> Option<Verdict> + Send>;
+
+/// A [`Checker`] over the user's settings. Everything is read again on each
+/// call, so starting a focus session in the app takes effect right away.
+pub fn checker(paths: &Paths) -> Checker {
+    let (db_file, config_file) = (paths.db_file.clone(), paths.config_file.clone());
+    Box::new(move |url: &str, title: &str| {
+        let store = Store::open(&db_file).ok()?;
+        let block = Settings::load(&store).ok()?.block;
+        let now = now_ms();
+        if block.sites.is_empty() && block.limits.is_empty() && block.schedules.is_empty() && !block.focus_active(now) {
+            return None;
+        }
+        let settings = Settings::load(&store).ok()?;
+        let config = Config::load(&config_file).unwrap_or_default();
+        let categories = settings.categories(&config, Lang::detect());
+        let tz = jiff::tz::TimeZone::system();
+        block.check(&categories, url, title, now, &tz, || {
+            let range = period::day_range(period::today(&tz), &tz).ok()?;
+            let events = store.events_between(range).ok()?;
+            Some(summarize(&events, range, &categories))
+        })
+    })
+}
+
 /// Starts listening on `127.0.0.1:port` in a background thread.
-pub fn listen(port: u16, full_urls: bool) -> std::io::Result<ActiveTab> {
+pub fn listen(port: u16, full_urls: bool, check: Checker) -> std::io::Result<ActiveTab> {
     let listener = TcpListener::bind((Ipv4Addr::LOCALHOST, port))?;
     let active = ActiveTab::default();
     let shared = active.clone();
     std::thread::spawn(move || {
         for stream in listener.incoming().flatten() {
-            let _ = serve(stream, &shared, full_urls);
+            let _ = serve(stream, &shared, full_urls, &check);
         }
     });
     Ok(active)
 }
 
-fn serve(mut stream: TcpStream, active: &ActiveTab, full_urls: bool) -> std::io::Result<()> {
+fn serve(mut stream: TcpStream, active: &ActiveTab, full_urls: bool, check: &Checker) -> std::io::Result<()> {
     stream.set_read_timeout(Some(Duration::from_secs(2)))?;
     stream.set_write_timeout(Some(Duration::from_secs(2)))?;
 
@@ -80,7 +112,7 @@ fn serve(mut stream: TcpStream, active: &ActiveTab, full_urls: bool) -> std::io:
             break;
         }
     }
-    let (status, body) = respond(&request, active, full_urls);
+    let (status, body) = respond_with(&request, active, full_urls, check);
     write!(
         stream,
         "HTTP/1.1 {status}\r\nContent-Type: application/json\r\nContent-Length: {}\r\nConnection: close\r\n\r\n{body}",
@@ -108,8 +140,13 @@ fn is_complete(request: &[u8]) -> bool {
     body.len() >= length
 }
 
-/// Decides the reply to a raw HTTP request: `(status line, JSON body)`.
+#[cfg(test)]
 fn respond(request: &[u8], active: &ActiveTab, full_urls: bool) -> (&'static str, String) {
+    respond_with(request, active, full_urls, &(Box::new(|_: &str, _: &str| None) as Checker))
+}
+
+/// Decides the reply to a raw HTTP request: `(status line, JSON body)`.
+fn respond_with(request: &[u8], active: &ActiveTab, full_urls: bool, check: &Checker) -> (&'static str, String) {
     let Some((head, body)) = split_request(request) else {
         return ("400 Bad Request", "{}".into());
     };
@@ -133,7 +170,10 @@ fn respond(request: &[u8], active: &ActiveTab, full_urls: bool) -> (&'static str
             // No URL (or one we do not store) means "no trackable tab".
             let tab = clean_url(&text("url"), full_urls).map(|url| Tab { url, title: text("title") });
             active.set(tab);
-            ("200 OK", "{}".into())
+            // Blocking looks at the page as the browser sees it, before any
+            // privacy trimming.
+            let verdict = check(&text("url"), &text("title"));
+            ("200 OK", serde_json::json!({ "block": verdict }).to_string())
         }
         _ => ("404 Not Found", "{}".into()),
     }
@@ -171,6 +211,25 @@ mod tests {
         let mut other = window("Inbox - Gmail - Google Chrome");
         active.annotate(&mut other);
         assert_eq!(other.url, None);
+    }
+
+    #[test]
+    fn the_reply_tells_the_extension_to_block() {
+        let active = ActiveTab::default();
+        let check: Checker = Box::new(|url: &str, _: &str| {
+            url.contains("youtube").then(|| Verdict {
+                reason: "focus",
+                site: "youtube.com".into(),
+                until_ms: Some(5),
+                limit_minutes: None,
+            })
+        });
+        let (_, body) = respond_with(&post(EXT, r#"{"url":"https://youtube.com/","title":"Y"}"#), &active, true, &check);
+        let reply: Value = serde_json::from_str(&body).unwrap();
+        assert_eq!(reply["block"]["reason"], "focus");
+        assert_eq!(reply["block"]["until_ms"], 5);
+        let (_, body) = respond_with(&post(EXT, r#"{"url":"https://github.com/","title":"G"}"#), &active, true, &check);
+        assert_eq!(serde_json::from_str::<Value>(&body).unwrap()["block"], Value::Null);
     }
 
     #[test]

@@ -41,6 +41,18 @@ enum Command {
         #[arg(long, default_value_t = 30)]
         limit: usize,
     },
+    /// Export the recorded events as CSV
+    Export {
+        /// First day (YYYY-MM-DD). Defaults to today
+        #[arg(long, value_name = "DATE")]
+        from: Option<String>,
+        /// Last day, inclusive (YYYY-MM-DD). Defaults to --from
+        #[arg(long, value_name = "DATE")]
+        to: Option<String>,
+        /// Write to this file instead of the terminal
+        #[arg(long, short, value_name = "FILE")]
+        output: Option<std::path::PathBuf>,
+    },
     /// Upload this device's events to a zman server (all your devices in one place)
     Sync {
         #[command(subcommand)]
@@ -80,6 +92,7 @@ fn main() {
         Command::Today { date } => reports::today(lang, date.as_deref()),
         Command::Week { date } => reports::week(lang, date.as_deref()),
         Command::Apps { date, week, limit } => reports::apps(lang, date.as_deref(), week, limit),
+        Command::Export { from, to, output } => reports::export(lang, from.as_deref(), to.as_deref(), output.as_deref()),
         Command::Sync { action } => match action {
             Some(SyncAction::Login { server, email, register }) => sync::login(lang, &server, email, register),
             Some(SyncAction::Now) | None => sync::run_now(lang),
