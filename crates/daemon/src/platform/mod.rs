@@ -17,12 +17,13 @@ pub trait Platform {
     fn idle_time(&self) -> Duration;
 }
 
+/// `read_address_bar`: also report the page a browser window is showing.
 #[cfg(windows)]
-pub fn current() -> Result<Box<dyn Platform>, String> {
-    Ok(Box::new(windows::WindowsPlatform))
+pub fn current(read_address_bar: bool) -> Result<Box<dyn Platform>, String> {
+    Ok(Box::new(windows::WindowsPlatform::new(read_address_bar)))
 }
 
 #[cfg(not(windows))]
-pub fn current() -> Result<Box<dyn Platform>, String> {
+pub fn current(_read_address_bar: bool) -> Result<Box<dyn Platform>, String> {
     Err(format!("zman does not support {} yet", std::env::consts::OS))
 }

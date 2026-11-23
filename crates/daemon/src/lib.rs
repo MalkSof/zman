@@ -56,7 +56,7 @@ pub fn run(paths: &Paths, config: Config, control: &Control, on_ready: impl FnOn
         return Err(RunError::AlreadyRunning);
     }
 
-    let platform = platform::current().map_err(other)?;
+    let platform = platform::current(config.browser.read_address_bar).map_err(other)?;
     let poll_interval = Duration::from_secs(config.poll_interval_secs);
     // The browser extension is optional: if the port is taken, tracking
     // simply goes on without URLs.
@@ -71,6 +71,7 @@ pub fn run(paths: &Paths, config: Config, control: &Control, on_ready: impl FnOn
         },
     };
     let store = Store::open(&paths.db_file).map_err(other)?;
+    let full_urls = config.browser.full_urls;
     let sync_config = config.clone();
     let mut tracker = Tracker::new(store, config).map_err(other)?;
     on_ready();
@@ -79,7 +80,7 @@ pub fn run(paths: &Paths, config: Config, control: &Control, on_ready: impl FnOn
     // slow network never delays tracking. Scoped: it ends with this function.
     std::thread::scope(|scope| {
         scope.spawn(|| sync_periodically(paths, &sync_config, control));
-        track(&mut tracker, platform.as_ref(), active_tab.as_ref(), poll_interval, control);
+        track(&mut tracker, platform.as_ref(), active_tab.as_ref(), full_urls, poll_interval, control);
     });
     Ok(())
 }
@@ -104,6 +105,7 @@ fn track(
     tracker: &mut Tracker,
     platform: &dyn platform::Platform,
     active_tab: Option<&browser::ActiveTab>,
+    full_urls: bool,
     poll_interval: Duration,
     control: &Control,
 ) {
@@ -111,8 +113,13 @@ fn track(
     while !control.stop.load(Ordering::SeqCst) {
         if !control.paused.load(Ordering::SeqCst) {
             let mut window = platform.active_window();
-            if let (Some(window), Some(active_tab)) = (window.as_mut(), active_tab) {
-                active_tab.annotate(window);
+            if let Some(window) = window.as_mut() {
+                // An address read from the browser window is trimmed like
+                // the ones the extension reports, which take priority.
+                window.url = window.url.take().and_then(|url| zman_core::event::clean_url(&url, full_urls));
+                if let Some(active_tab) = active_tab {
+                    active_tab.annotate(window);
+                }
             }
             let idle_ms = platform.idle_time().as_millis() as i64;
             if let Err(e) = tracker.tick(now_ms(), window, idle_ms) {

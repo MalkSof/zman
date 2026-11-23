@@ -72,6 +72,22 @@ pub fn clean_url(url: &str, full: bool) -> Option<String> {
     Some(format!("{scheme}://{host}/{path}"))
 }
 
+/// Turns the text of a browser's address bar into a URL. Browsers hide the
+/// scheme (`github.com/rust-lang`), and the bar may hold a search instead of
+/// an address, which gives `None`.
+pub fn url_from_address_bar(text: &str) -> Option<String> {
+    let text = text.trim();
+    if text.is_empty() || text.contains(char::is_whitespace) {
+        return None;
+    }
+    if text.contains("://") {
+        return Some(text.to_string());
+    }
+    let host = text.split(['/', '?', '#', ':']).next()?;
+    let looks_like_a_site = host == "localhost" || (host.contains('.') && !host.starts_with('.') && !host.ends_with('.'));
+    looks_like_a_site.then(|| format!("https://{text}"))
+}
+
 /// App name for display: `chrome.exe` -> `chrome`.
 pub fn display_app(app: &str) -> &str {
     let lower_ends = |suffix: &str| {
@@ -87,6 +103,18 @@ pub fn display_app(app: &str) -> &str {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn address_bar_text_becomes_a_url_or_nothing() {
+        assert_eq!(url_from_address_bar("github.com/MalkSof/zman").as_deref(), Some("https://github.com/MalkSof/zman"));
+        assert_eq!(url_from_address_bar(" youtube.com ").as_deref(), Some("https://youtube.com"));
+        assert_eq!(url_from_address_bar("localhost:3000/app").as_deref(), Some("https://localhost:3000/app"));
+        assert_eq!(url_from_address_bar("http://example.org/a").as_deref(), Some("http://example.org/a"));
+        assert_eq!(url_from_address_bar("chrome://settings").as_deref(), Some("chrome://settings"));
+        assert_eq!(url_from_address_bar("how to learn rust"), None);
+        assert_eq!(url_from_address_bar("rust"), None);
+        assert_eq!(url_from_address_bar(""), None);
+    }
 
     #[test]
     fn domain_extraction() {

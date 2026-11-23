@@ -43,6 +43,9 @@ pub struct Exclude {
 #[derive(Debug, Clone, PartialEq, Deserialize)]
 #[serde(default, deny_unknown_fields)]
 pub struct Browser {
+    /// Read the page address from the browser's own address bar, so sites
+    /// are known without installing the extension.
+    pub read_address_bar: bool,
     /// Local port the extension talks to. 0 turns the feature off.
     pub port: u16,
     /// Store the page path (`https://github.com/user/repo`). When false only
@@ -68,7 +71,7 @@ impl Default for Sync {
 
 impl Default for Browser {
     fn default() -> Self {
-        Browser { port: 27184, full_urls: true }
+        Browser { read_address_bar: true, port: 27184, full_urls: true }
     }
 }
 
@@ -255,7 +258,7 @@ name = \"X\"").is_err());
         assert!(config.is_excluded("chrome.exe", "Accounts", Some("https://online.mybank.com/")));
         assert!(!config.is_excluded("chrome.exe", "Accounts", Some("https://notmybank.com/")));
         assert!(!config.is_excluded("chrome.exe", "Accounts", None));
-        assert_eq!(config.browser, Browser { port: 0, full_urls: false });
+        assert_eq!(config.browser, Browser { read_address_bar: true, port: 0, full_urls: false });
         assert_eq!(Config::default().browser.port, 27184);
         assert!(Config::default().sync.titles);
         assert!(!Config::parse("[sync]\ntitles = false").unwrap().sync.titles);

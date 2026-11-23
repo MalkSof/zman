@@ -30,8 +30,8 @@ Sitio web y demo en vivo: https://malksof.github.io/zman/
 - zman nunca registra teclas ni contenido de la pantalla. Lee el nombre de la
   app y el título de la ventana activa, y *hace cuánto* fue el último input.
 - Las apps, títulos y sitios que excluyas nunca se escriben en disco.
-- Las ventanas privadas del navegador nunca se informan. Los parámetros de las
-  URLs nunca se guardan.
+- Las ventanas privadas del navegador nunca se leen ni se informan. Los
+  parámetros de las URLs nunca se guardan.
 - Los asistentes de IA solo reciben datos agregados (tiempo por categoría, app
   y sitio). Los títulos de ventana nunca se exponen por MCP. Lo único que un
   asistente puede cambiar es iniciar o terminar una sesión de foco, y solo
@@ -125,9 +125,18 @@ ventanas privadas ni navegadores sin la extensión. No es un control parental.
 - **Exportar esta vista a CSV**, en el menú de ajustes, guarda los eventos
   del día o la semana en pantalla en tu carpeta de Descargas.
 
+## Sitios web
+
+zman lee la dirección de la página desde la propia ventana del navegador
+(Chrome, Edge, Brave, Firefox, Opera, Vivaldi), igual que un lector de
+pantalla, así que el tiempo se separa por sitio y se categoriza según el sitio
+sin instalar nada. Solo se lee la dirección, nunca la página. Las ventanas
+privadas se saltean. Se apaga con `read_address_bar = false`.
+
 ## Extensión de navegador
 
-Sin ella, un navegador cuenta como una sola app. Con ella, zman sabe el sitio.
+Opcional para registrar, necesaria para [bloquear](#foco-y-bloqueo). Informa
+la pestaña exacta, y es la que tapa una página bloqueada.
 
 1. Abrí `chrome://extensions` (o `edge://extensions`).
 2. Activá el **Modo de desarrollador**.
@@ -152,6 +161,7 @@ titles = ["*InPrivate*", "*Private Browsing*", "*banco*"]
 domains = ["mibanco.com"]
 
 [browser]
+read_address_bar = true    # false: solo se sabe el sitio cuando lo informa la extensión
 port = 27184               # 0 apaga el soporte de la extensión
 full_urls = true           # false guarda solo el sitio, no la ruta de la página
 
@@ -242,7 +252,9 @@ ZMAN_HOME=./demo cargo run -p zman-cli -- week
 
 - **Probado en Windows 11**: tracker, CLI, MCP local, app de escritorio, el
   receptor del navegador y las decisiones de bloqueo (con pedidos simulados
-  de la extensión) y el servidor con almacenamiento en memoria, incluyendo
+  de la extensión), la lectura de la dirección de la página en Chrome
+  (incluido saltear una ventana de incógnito; otros navegadores e idiomas
+  están sin probar) y el servidor con almacenamiento en memoria, incluyendo
   todo el flujo OAuth y el MCP remoto.
   `cargo test` cubre la lógica del core, las herramientas MCP y la API HTTP
   del servidor.

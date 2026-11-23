@@ -30,8 +30,8 @@ Website and live demo: https://malksof.github.io/zman/
 - zman never records keystrokes or screen content. It reads the active
   window's app name and title, and *how long ago* the last input happened.
 - Apps, window titles and sites you exclude are never written to disk.
-- Private browser windows are never reported. Query strings of URLs are never
-  stored.
+- Private browser windows are never read or reported. Query strings of URLs
+  are never stored.
 - AI assistants only ever receive aggregates (time per category, app and
   site). Window titles are never exposed through MCP. The only thing an
   assistant can change is starting or ending a focus session, and only after
@@ -124,9 +124,18 @@ a parental control.
 - **Export this view as CSV** in the settings menu writes the events of the
   day or week on screen to your Downloads folder.
 
+## Websites
+
+zman reads the address of the page from the browser window itself (Chrome,
+Edge, Brave, Firefox, Opera, Vivaldi), the same way a screen reader does, so
+time is split per site and categorized by site with nothing to install. Only
+the address is read, never the page. Private windows are skipped. Turn it off
+with `read_address_bar = false`.
+
 ## Browser extension
 
-Without it, a browser counts as one app. With it, zman knows the site.
+Optional for tracking, required for [blocking](#focus-and-blocking). It
+reports the exact tab, and it is what covers a blocked page.
 
 1. Open `chrome://extensions` (or `edge://extensions`).
 2. Turn on **Developer mode**.
@@ -151,6 +160,7 @@ titles = ["*InPrivate*", "*Private Browsing*", "*banco*"]
 domains = ["mybank.com"]
 
 [browser]
+read_address_bar = true    # false: only know the site when the extension reports it
 port = 27184               # 0 turns extension support off
 full_urls = true           # false keeps only the site, not the page path
 
@@ -240,7 +250,8 @@ ZMAN_HOME=./demo cargo run -p zman-cli -- week
 
 - **Tested on Windows 11**: tracker, CLI, local MCP, desktop app, the browser
   listener and the blocking decisions (with simulated requests from the
-  extension) and the server on in-memory storage, including the whole OAuth
+  extension), reading the page address from Chrome (including skipping an
+  incognito window; other browsers and languages are untested) and the server on in-memory storage, including the whole OAuth
   flow and remote MCP. `cargo test` covers the core
   logic, the MCP tools and the server's HTTP API.
 - **Not yet run**: the server against a real Postgres, the Docker image, the
