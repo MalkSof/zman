@@ -10,4 +10,54 @@
     <xhtml:link rel="alternate" hreflang="en" href="https://malksof.github.io/zman/"/>
     <xhtml:link rel="alternate" hreflang="es" href="https://malksof.github.io/zman/es/"/>
   </url>
+  <url>
+    <loc>https://malksof.github.io/zman/blog/</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://malksof.github.io/zman/blog/"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://malksof.github.io/zman/es/blog/"/>
+  </url>
+  <url>
+    <loc>https://malksof.github.io/zman/blog/ask-claude-about-your-time/</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://malksof.github.io/zman/blog/ask-claude-about-your-time/"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://malksof.github.io/zman/es/blog/preguntarle-a-claude-por-tu-tiempo/"/>
+  </url>
+  <url>
+    <loc>https://malksof.github.io/zman/blog/block-distracting-websites-windows/</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://malksof.github.io/zman/blog/block-distracting-websites-windows/"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://malksof.github.io/zman/es/blog/bloquear-sitios-que-distraen-en-windows/"/>
+  </url>
+  <url>
+    <loc>https://malksof.github.io/zman/blog/cost-of-interruptions/</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://malksof.github.io/zman/blog/cost-of-interruptions/"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://malksof.github.io/zman/es/blog/cuanto-cuesta-una-interrupcion/"/>
+  </url>
+  <url>
+    <loc>https://malksof.github.io/zman/blog/rescuetime-alternatives/</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://malksof.github.io/zman/blog/rescuetime-alternatives/"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://malksof.github.io/zman/es/blog/alternativas-a-rescuetime/"/>
+  </url>
+  <url>
+    <loc>https://malksof.github.io/zman/es/blog/</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://malksof.github.io/zman/blog/"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://malksof.github.io/zman/es/blog/"/>
+  </url>
+  <url>
+    <loc>https://malksof.github.io/zman/es/blog/preguntarle-a-claude-por-tu-tiempo/</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://malksof.github.io/zman/blog/ask-claude-about-your-time/"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://malksof.github.io/zman/es/blog/preguntarle-a-claude-por-tu-tiempo/"/>
+  </url>
+  <url>
+    <loc>https://malksof.github.io/zman/es/blog/bloquear-sitios-que-distraen-en-windows/</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://malksof.github.io/zman/blog/block-distracting-websites-windows/"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://malksof.github.io/zman/es/blog/bloquear-sitios-que-distraen-en-windows/"/>
+  </url>
+  <url>
+    <loc>https://malksof.github.io/zman/es/blog/cuanto-cuesta-una-interrupcion/</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://malksof.github.io/zman/blog/cost-of-interruptions/"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://malksof.github.io/zman/es/blog/cuanto-cuesta-una-interrupcion/"/>
+  </url>
+  <url>
+    <loc>https://malksof.github.io/zman/es/blog/alternativas-a-rescuetime/</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://malksof.github.io/zman/blog/rescuetime-alternatives/"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://malksof.github.io/zman/es/blog/alternativas-a-rescuetime/"/>
+  </url>
 </urlset>

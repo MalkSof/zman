@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0">
+  <channel>
+    <title>zman blog · time tracking, focus and AI</title>
+    <link>https://malksof.github.io/zman/blog/</link>
+    <description>Numbers, guides and comparisons about time, focus and working with AI.</description>
+    <language>en</language>
+    <item><title>What an interruption really costs: 23 minutes, and other numbers</title><link>https://malksof.github.io/zman/blog/cost-of-interruptions/</link><guid>https://malksof.github.io/zman/blog/cost-of-interruptions/</guid><description>The research on interruptions at work, in numbers: how long it takes to get back to a task, how often we switch screens, and how to measure your own day.</description><pubDate>2026-11-24</pubDate></item>
+    <item><title>RescueTime alternatives in 2026: free and open source options compared</title><link>https://malksof.github.io/zman/blog/rescuetime-alternatives/</link><guid>https://malksof.github.io/zman/blog/rescuetime-alternatives/</guid><description>An honest comparison of RescueTime, ActivityWatch, ManicTime, Toggl Track and zman: price, where your data lives, platforms, website blocking and AI.</description><pubDate>2026-11-24</pubDate></item>
+    <item><title>How to block distracting websites on Windows, for free</title><link>https://malksof.github.io/zman/blog/block-distracting-websites-windows/</link><guid>https://malksof.github.io/zman/blog/block-distracting-websites-windows/</guid><description>Four ways to block YouTube, social media and other distracting sites on Windows: the hosts file, browser extensions, focus sessions and daily limits. What each one is good for.</description><pubDate>2026-11-24</pubDate></item>
+    <item><title>How to ask Claude where your time went (time tracking with MCP)</title><link>https://malksof.github.io/zman/blog/ask-claude-about-your-time/</link><guid>https://malksof.github.io/zman/blog/ask-claude-about-your-time/</guid><description>Connect an automatic time tracker to Claude or ChatGPT with MCP and ask about your week in plain language. Setup in one click, example questions and what the assistant can see.</description><pubDate>2026-11-24</pubDate></item>
+  </channel>
+</rss>

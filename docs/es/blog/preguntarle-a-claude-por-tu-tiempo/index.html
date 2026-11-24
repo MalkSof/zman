@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="es" data-lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Cómo preguntarle a Claude en qué se te fue el tiempo (registro de tiempo con MCP)</title>
+  <meta name="description" content="Conectá un time tracker automático con Claude o ChatGPT usando MCP y preguntá por tu semana en lenguaje natural. Configuración en un clic, preguntas de ejemplo y qué puede ver el asistente.">
+  <link rel="canonical" href="https://malksof.github.io/zman/es/blog/preguntarle-a-claude-por-tu-tiempo/">
+  <link rel="alternate" hreflang="en" href="https://malksof.github.io/zman/blog/ask-claude-about-your-time/">
+  <link rel="alternate" hreflang="es" href="https://malksof.github.io/zman/es/blog/preguntarle-a-claude-por-tu-tiempo/">
+  <link rel="alternate" hreflang="x-default" href="https://malksof.github.io/zman/blog/ask-claude-about-your-time/">
+  <meta property="og:type" content="article">
+  <meta property="og:site_name" content="zman">
+  <meta property="og:url" content="https://malksof.github.io/zman/es/blog/preguntarle-a-claude-por-tu-tiempo/">
+  <meta property="og:title" content="Cómo preguntarle a Claude en qué se te fue el tiempo (registro de tiempo con MCP)">
+  <meta property="og:description" content="Conectá un time tracker automático con Claude o ChatGPT usando MCP y preguntá por tu semana en lenguaje natural. Configuración en un clic, preguntas de ejemplo y qué puede ver el asistente.">
+  <meta property="og:image" content="https://malksof.github.io/zman/og-es.png">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="theme-color" content="#14161c">
+  <script type="application/ld+json">{"@context": "https://schema.org", "@type": "BlogPosting", "headline": "Cómo preguntarle a Claude en qué se te fue el tiempo (registro de tiempo con MCP)", "description": "Conectá un time tracker automático con Claude o ChatGPT usando MCP y preguntá por tu semana en lenguaje natural. Configuración en un clic, preguntas de ejemplo y qué puede ver el asistente.", "datePublished": "2026-11-24", "dateModified": "2026-11-24", "inLanguage": "es", "mainEntityOfPage": "https://malksof.github.io/zman/es/blog/preguntarle-a-claude-por-tu-tiempo/", "image": "https://malksof.github.io/zman/og-es.png", "author": {"@type": "Organization", "name": "zman", "url": "https://malksof.github.io/zman/"}, "publisher": {"@type": "Organization", "name": "zman", "logo": {"@type": "ImageObject", "url": "https://malksof.github.io/zman/icon.png"}}}</script>
+  <link rel="alternate" type="application/rss+xml" title="zman" href="https://malksof.github.io/zman/es/blog/feed.xml">
+  <link rel="icon" href="../../../icon.png">
+  <link rel="stylesheet" href="../../../site.css">
+</head>
+<body>
+  <header class="nav">
+    <a class="brand" href="../../../es/"><img src="../../../icon.png" alt="zman" width="28" height="28">zman</a>
+    <nav>
+      <a href="../../../es/">Inicio</a>
+      <a href="../../../es/blog/">Blog</a>
+    </nav>
+    <div class="nav-right">
+      <span class="lang-toggle"><a data-code="en" hreflang="en" href="../../../blog/ask-claude-about-your-time/">EN</a><a data-code="es" hreflang="es" href="../../../es/blog/preguntarle-a-claude-por-tu-tiempo/">ES</a></span>
+      <a class="btn small" href="https://github.com/MalkSof/zman">GitHub</a>
+    </div>
+  </header>
+  <main>
+    <article class="post">
+      <a class="post-back" href="../">← Todos los artículos</a>
+      <h1>Cómo preguntarle a Claude en qué se te fue el tiempo (registro de tiempo con MCP)</h1>
+      <p class="post-meta"><time datetime="2026-11-24">24 de noviembre de 2026</time></p>
+<p>Los time trackers siempre tuvieron el mismo problema: los datos están, y nadie los mira. Un dashboard te pide que vayas, elijas un rango de fechas e interpretes gráficos. La mayoría abandona después de la primera semana.</p>
+<p>Los asistentes de IA cambian eso. Si el asistente puede leer tu tracker, no buscás nada. Preguntás.</p>
+
+<h2>Qué es MCP, en un párrafo</h2>
+<p>MCP, el Model Context Protocol, es un estándar abierto que le permite a un asistente de IA usar herramientas externas. Un programa que habla MCP ofrece una lista de cosas que sabe hacer ("dame el resumen de una semana"), y el asistente las llama cuando tu pregunta lo necesita. Claude y ChatGPT lo soportan.</p>
+
+<h2>Cómo configurarlo con zman</h2>
+<ol>
+  <li>Instalá <a href="../../../es/">zman</a> y dejalo correr uno o dos días, para que haya algo sobre lo que preguntar.</li>
+  <li>Abrí la app y tocá <b>Conectar</b>.</li>
+  <li>Al lado de Claude Desktop, tocá <b>Conectar</b> de nuevo. Esa es toda la configuración.</li>
+  <li>Cerrá Claude Desktop por completo y volvé a abrirlo. Las herramientas de zman ya están ahí.</li>
+</ol>
+<p>Para Claude Code, el mismo diálogo te da un comando de una línea. Para ChatGPT o Claude en la web, que no pueden llegar a los programas de tu computadora, levantás tu propio servidor zman chico e iniciás sesión en él desde el asistente.</p>
+
+<h2>Preguntas que funcionan bien</h2>
+<ul>
+  <li><b>"¿En qué se me fue la semana?"</b> Totales, categorías, tu día más largo.</li>
+  <li><b>"Compará esta semana con la anterior."</b> Qué creció, qué bajó y cuánto.</li>
+  <li><b>"¿Cuándo me concentro mejor?"</b> Mira tus bloques de foco y encuentra las horas donde ocurren.</li>
+  <li><b>"¿Cuánto tiempo pasé en YouTube este mes?"</b> Cualquier app o sitio, cualquier rango.</li>
+  <li><b>"Tengo una entrega el viernes. Según la semana pasada, ¿con cuántas horas reales de trabajo profundo puedo contar?"</b> Acá es donde un asistente le gana a un gráfico: razona con tus números.</li>
+  <li><b>"Bloqueame las distracciones por 50 minutos."</b> Si lo permitís, el asistente inicia una sesión de foco y los sitios que distraen quedan bloqueados.</li>
+</ul>
+
+<h2>Qué puede ver el asistente y qué no</h2>
+<p>Esta es la parte para leer antes de conectar cualquier cosa a una IA.</p>
+<ul>
+  <li><b>Recibe totales:</b> tiempo por categoría, por app y por sitio web, un puntaje de productividad y bloques de foco.</li>
+  <li><b>Nunca recibe títulos de ventanas.</b> El nombre del documento que tenías abierto, el asunto de un mail, el título de un video: nada de eso se expone.</li>
+  <li><b>No puede cambiar tus datos.</b> Las herramientas son de solo lectura. La única excepción es iniciar o terminar una sesión de foco, y eso viene apagado hasta que lo actives.</li>
+  <li><b>Con Claude Desktop nada pasa por un servidor nuestro.</b> El asistente habla con un programa en tu propia computadora.</li>
+</ul>
+
+<h2>Por qué le gana a un dashboard</h2>
+<p>Un gráfico responde la pregunta que se le ocurrió a quien lo diseñó. Un asistente responde la tuya, incluida la repregunta. "¿Por qué el martes fue tan malo?" no es un filtro en ningún dashboard, pero es una pregunta perfectamente buena para hacerle a algo que puede ver el martes.</p>
+    </article>
+    <section class="post-cta">
+      <h2>Mirá a dónde se va tu propio tiempo</h2>
+      <p>zman es un time tracker automático, gratis y open source para Windows. Tus datos quedan en tu computadora.</p>
+      <a class="btn" href="../../../es/#download">Descargar zman gratis</a>
+    </section>
+  </main>
+  <footer>
+    <span>zman · time tracker gratis y open source · MIT</span>
+    <a href="https://github.com/MalkSof/zman">github.com/MalkSof/zman</a>
+  </footer>
+</body>
+</html>

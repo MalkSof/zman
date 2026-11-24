@@ -4,7 +4,11 @@ site/index.html holds both languages side by side, as pairs of
 `<span lang="en">` and `<span lang="es">`. This script writes one page per
 language (docs/index.html in English, docs/es/index.html in Spanish), each
 with its own title, description, social card, structured data and links to
-the other language, plus sitemap.xml.
+the other language, plus the blog (see blog.py), sitemap.xml and robots.txt.
+
+The address of the site is https://malksof.github.io/zman/ unless the file
+site/CNAME exists; then it is the domain written there (for example
+zman.example.com), and GitHub Pages serves the site on that domain.
 
     python scripts/build_site.py
 
@@ -12,10 +16,14 @@ The dashboard demo under docs/demo is rebuilt separately by demo_site.py.
 """
 import html, io, json, os, re, shutil
 
+import blog
+
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SRC = os.path.join(ROOT, "site")
 OUT = os.path.join(ROOT, "docs")
 URL = "https://malksof.github.io/zman/"
+if os.path.exists(os.path.join(SRC, "CNAME")):
+    URL = "https://%s/" % io.open(os.path.join(SRC, "CNAME"), encoding="utf-8").read().strip()
 REPO = "https://github.com/MalkSof/zman"
 VERSION = "0.2.0"
 
@@ -28,6 +36,8 @@ PAGES = {
                        "block distracting sites and ask Claude or ChatGPT about your day. Your data stays on your computer.",
         "card_title": "Know where your time goes. Then ask Claude about it.",
         "faq_title": "Questions people ask",
+        "posts_title": "From the blog",
+        "posts_more": "All articles",
         "faq": [
             ("Is zman free?",
              "Yes. zman is free and open source under the MIT license. There is no account, no trial and no paid plan: you download it and it works."),
@@ -51,6 +61,8 @@ PAGES = {
                        "bloqueá los sitios que distraen y preguntale a Claude o ChatGPT por tu día. Tus datos quedan en tu computadora.",
         "card_title": "Sabé a dónde se va tu tiempo. Y preguntáselo a Claude.",
         "faq_title": "Preguntas frecuentes",
+        "posts_title": "Del blog",
+        "posts_more": "Todos los artículos",
         "faq": [
             ("¿zman es gratis?",
              "Sí. zman es gratis y open source, con licencia MIT. No hay cuenta, ni prueba, ni plan pago: lo descargás y funciona."),
@@ -152,6 +164,16 @@ def write(path, text):
         f.write(text)
 
 
+posts, blog_paths = blog.build(SRC, OUT, URL, write)
+
+
+def latest(lang, root):
+    page = PAGES[lang]
+    return ('    <section class="from-blog">\n      <h2>%s</h2>\n      <div class="post-list three">\n%s\n      </div>\n'
+            '      <div class="cta center"><a class="btn ghost" href="%s%sblog/">%s</a></div>\n    </section>') % (
+        page["posts_title"], blog.cards(posts, lang, root, 3), root, page["path"], page["posts_more"])
+
+
 template = io.open(os.path.join(SRC, "index.html"), encoding="utf-8").read()
 for lang, page in PAGES.items():
     root = "../" * page["path"].count("/")
@@ -161,6 +183,8 @@ for lang, page in PAGES.items():
         "root": root,
         "head": head(lang),
         "faq": faq(lang),
+        "posts": latest(lang, root),
+        "blog": root + page["path"] + "blog/",
         "en": root or "./",
         "es": root + PAGES["es"]["path"],
     }
@@ -170,7 +194,7 @@ for lang, page in PAGES.items():
     write(os.path.join(OUT, page["path"], "index.html"), text)
 
 for name in os.listdir(SRC):
-    if name != "index.html":
+    if name != "index.html" and os.path.isfile(os.path.join(SRC, name)):
         shutil.copyfile(os.path.join(SRC, name), os.path.join(OUT, name))
 
 write(os.path.join(OUT, "sitemap.xml"), '<?xml version="1.0" encoding="UTF-8"?>\n'
@@ -181,6 +205,14 @@ write(os.path.join(OUT, "sitemap.xml"), '<?xml version="1.0" encoding="UTF-8"?>\
               "".join('    <xhtml:link rel="alternate" hreflang="%s" href="%s"/>\n' % (code, URL + other["path"])
                       for code, other in PAGES.items()))
           for page in PAGES.values())
+      + "".join(
+          "  <url>\n    <loc>%s</loc>\n%s  </url>\n" % (
+              URL + path,
+              "".join('    <xhtml:link rel="alternate" hreflang="%s" href="%s"/>\n' % (code, URL + other)
+                      for code, other in others.items()))
+          for path, others in blog_paths)
       + "</urlset>\n")
+# Only read by crawlers when the site sits at the root of its domain.
+write(os.path.join(OUT, "robots.txt"), "User-agent: *\nAllow: /\n\nSitemap: %ssitemap.xml\n" % URL)
 write(os.path.join(OUT, ".nojekyll"), "")
 print("site built:", ", ".join(URL + page["path"] for page in PAGES.values()))

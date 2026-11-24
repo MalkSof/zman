@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0">
+  <channel>
+    <title>Blog de zman · registro de tiempo, foco e IA</title>
+    <link>https://malksof.github.io/zman/es/blog/</link>
+    <description>Datos, guías y comparativas sobre tiempo, foco y trabajo con IA.</description>
+    <language>es</language>
+    <item><title>Cómo preguntarle a Claude en qué se te fue el tiempo (registro de tiempo con MCP)</title><link>https://malksof.github.io/zman/es/blog/preguntarle-a-claude-por-tu-tiempo/</link><guid>https://malksof.github.io/zman/es/blog/preguntarle-a-claude-por-tu-tiempo/</guid><description>Conectá un time tracker automático con Claude o ChatGPT usando MCP y preguntá por tu semana en lenguaje natural. Configuración en un clic, preguntas de ejemplo y qué puede ver el asistente.</description><pubDate>2026-11-24</pubDate></item>
+    <item><title>Cómo bloquear sitios que distraen en Windows, gratis</title><link>https://malksof.github.io/zman/es/blog/bloquear-sitios-que-distraen-en-windows/</link><guid>https://malksof.github.io/zman/es/blog/bloquear-sitios-que-distraen-en-windows/</guid><description>Cuatro formas de bloquear YouTube, redes sociales y otros sitios que distraen en Windows: el archivo hosts, extensiones, sesiones de foco y límites diarios. Para qué sirve cada una.</description><pubDate>2026-11-24</pubDate></item>
+    <item><title>Cuánto cuesta de verdad una interrupción: 23 minutos, y otros datos</title><link>https://malksof.github.io/zman/es/blog/cuanto-cuesta-una-interrupcion/</link><guid>https://malksof.github.io/zman/es/blog/cuanto-cuesta-una-interrupcion/</guid><description>Lo que dice la investigación sobre las interrupciones en el trabajo, en números: cuánto tardamos en retomar una tarea, cada cuánto cambiamos de pantalla y cómo medir tu propio día.</description><pubDate>2026-11-24</pubDate></item>
+    <item><title>Alternativas a RescueTime en 2026: opciones gratis y open source comparadas</title><link>https://malksof.github.io/zman/es/blog/alternativas-a-rescuetime/</link><guid>https://malksof.github.io/zman/es/blog/alternativas-a-rescuetime/</guid><description>Una comparación honesta de RescueTime, ActivityWatch, ManicTime, Toggl Track y zman: precio, dónde quedan tus datos, plataformas, bloqueo de sitios e IA.</description><pubDate>2026-11-24</pubDate></item>
+  </channel>
+</rss>
