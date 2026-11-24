@@ -3,22 +3,44 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>zman — know where your time goes, and ask Claude about it</title>
-  <meta name="description" content="Open source, local-first automatic time tracker. See where your time goes and ask Claude or ChatGPT about it. Your data stays on your computer.">
+  <title>zman · Free automatic time tracker, a RescueTime alternative</title>
+  <meta name="description" content="Free, open source automatic time tracker for Windows. See where your time goes, block distracting sites and ask Claude or ChatGPT about your day. Your data stays on your computer.">
+  <link rel="canonical" href="https://malksof.github.io/zman/">
+  <link rel="alternate" hreflang="en" href="https://malksof.github.io/zman/">
+  <link rel="alternate" hreflang="es" href="https://malksof.github.io/zman/es/">
+  <link rel="alternate" hreflang="x-default" href="https://malksof.github.io/zman/">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="zman">
+  <meta property="og:url" content="https://malksof.github.io/zman/">
+  <meta property="og:title" content="Know where your time goes. Then ask Claude about it.">
+  <meta property="og:description" content="Free, open source automatic time tracker for Windows. See where your time goes, block distracting sites and ask Claude or ChatGPT about your day. Your data stays on your computer.">
+  <meta property="og:image" content="https://malksof.github.io/zman/og-en.png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:locale" content="en_US">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Know where your time goes. Then ask Claude about it.">
+  <meta name="twitter:description" content="Free, open source automatic time tracker for Windows. See where your time goes, block distracting sites and ask Claude or ChatGPT about your day. Your data stays on your computer.">
+  <meta name="twitter:image" content="https://malksof.github.io/zman/og-en.png">
+  <meta name="theme-color" content="#14161c">
+  <script type="application/ld+json">{"@context": "https://schema.org", "@type": "SoftwareApplication", "name": "zman", "description": "Free, open source automatic time tracker for Windows. See where your time goes, block distracting sites and ask Claude or ChatGPT about your day. Your data stays on your computer.", "url": "https://malksof.github.io/zman/", "image": "https://malksof.github.io/zman/og-en.png", "applicationCategory": "ProductivityApplication", "operatingSystem": "Windows 10, Windows 11", "softwareVersion": "0.2.0", "downloadUrl": "https://github.com/MalkSof/zman/releases/latest", "license": "https://opensource.org/licenses/MIT", "isAccessibleForFree": true, "inLanguage": "en", "offers": {"@type": "Offer", "price": "0", "priceCurrency": "USD"}, "codeRepository": "https://github.com/MalkSof/zman"}</script>
+  <script type="application/ld+json">{"@context": "https://schema.org", "@type": "FAQPage", "inLanguage": "en", "mainEntity": [{"@type": "Question", "name": "Is zman free?", "acceptedAnswer": {"@type": "Answer", "text": "Yes. zman is free and open source under the MIT license. There is no account, no trial and no paid plan: you download it and it works."}}, {"@type": "Question", "name": "Is it an alternative to RescueTime?", "acceptedAnswer": {"@type": "Answer", "text": "Yes. Like RescueTime, zman tracks the apps and websites you use automatically and gives you a productivity score, categories and focus time. The difference is that zman is open source and keeps your data in a file on your own computer instead of in someone else's cloud."}}, {"@type": "Question", "name": "How does it work with Claude and ChatGPT?", "acceptedAnswer": {"@type": "Answer", "text": "zman speaks MCP, the protocol AI assistants use to reach tools. Press Connect in the app and Claude Desktop can answer questions like \"where did my week go?\" from your real numbers. With your own zman server, ChatGPT and Claude on the web connect too. Assistants only receive totals, never window titles."}}, {"@type": "Question", "name": "Can it block distracting websites?", "acceptedAnswer": {"@type": "Answer", "text": "Yes. Start a focus session to block entertainment and social media for 25, 50 or 90 minutes, set daily limits such as \"YouTube, 30 minutes a day\", or block sites during your working hours. Blocking uses the zman browser extension."}}, {"@type": "Question", "name": "What does zman record? Is it private?", "acceptedAnswer": {"@type": "Answer", "text": "Only the name of the app in use, the window title, the address of the site in your browser and for how long. It never records keystrokes, screenshots or the content of pages, and it skips private browser windows. Nothing leaves your computer unless you sign in to a server you run yourself."}}, {"@type": "Question", "name": "Which systems does it support?", "acceptedAnswer": {"@type": "Answer", "text": "Windows 10 and 11 today, with an Android companion app for phone usage. macOS and Linux are not supported yet."}}]}</script>
   <link rel="icon" href="icon.png">
+  <link rel="apple-touch-icon" href="icon.png">
   <link rel="stylesheet" href="site.css">
 </head>
 <body>
   <header class="nav">
-    <a class="brand" href="#top"><img src="icon.png" alt="" width="28" height="28">zman</a>
+    <a class="brand" href="#top"><img src="icon.png" alt="zman" width="28" height="28">zman</a>
     <nav>
       <a href="#claude">Claude</a>
       <a href="#demo">Demo</a>
-      <a href="#privacy"><span lang="en">Privacy</span><span lang="es">Privacidad</span></a>
-      <a href="#services"><span lang="en">Services</span><span lang="es">Servicios</span></a>
+      <a href="#privacy">Privacy</a>
+      <a href="#faq">FAQ</a>
+      <a href="#services">Services</a>
     </nav>
     <div class="nav-right">
-      <button class="lang-toggle" id="lang-toggle" aria-label="Language"><b data-code="en">EN</b><b data-code="es">ES</b></button>
+      <span class="lang-toggle" id="lang-toggle"><a data-code="en" hreflang="en" href="./" title="English">EN</a><a data-code="es" hreflang="es" href="es/" title="Español">ES</a></span>
       <a class="btn small" href="https://github.com/MalkSof/zman">GitHub</a>
     </div>
   </header>
@@ -26,213 +48,216 @@
   <main id="top">
     <section class="hero">
       <p class="eyebrow">
-        <span lang="en">Open source · local-first · written in Rust</span>
-        <span lang="es">Open source · local-first · escrito en Rust</span>
+        Free automatic time tracker · open source · RescueTime alternative
+        
       </p>
       <h1>
-        <span lang="en">Know where your time goes.<br><em>Then ask Claude about it.</em></span>
-        <span lang="es">Sabé a dónde se va tu tiempo.<br><em>Y preguntáselo a Claude.</em></span>
+        Know where your time goes.<br><em>Then ask Claude about it.</em>
+        
       </h1>
       <p class="lead">
-        <span lang="en">zman quietly records which apps and sites you use and for how long. No timers, no buttons. Your data stays on your computer, and your AI assistant can answer questions about it in plain language.</span>
-        <span lang="es">zman registra en silencio qué apps y sitios usás y por cuánto tiempo. Sin cronómetros ni botones. Tus datos quedan en tu computadora, y tu asistente de IA puede responder preguntas sobre ellos en lenguaje natural.</span>
+        zman quietly records which apps and sites you use and for how long. No timers, no buttons. Your data stays on your computer, and your AI assistant can answer questions about it in plain language.
+        
       </p>
       <div class="cta">
         <a class="btn" href="#download">
-          <span lang="en">Get zman</span><span lang="es">Conseguir zman</span>
+          Get zman
         </a>
         <a class="btn ghost" href="#demo">
-          <span lang="en">Try the live demo</span><span lang="es">Probar la demo en vivo</span>
+          Try the live demo
         </a>
       </div>
     </section>
 
     <section class="claude" id="claude">
       <div class="claude-text">
-        <p class="eyebrow"><span lang="en">Connected to Claude</span><span lang="es">Conectado con Claude</span></p>
+        <p class="eyebrow">Connected to Claude</p>
         <h2>
-          <span lang="en">Your time, answered in a sentence.</span>
-          <span lang="es">Tu tiempo, respondido en una frase.</span>
+          Your time, answered in a sentence.
+          
         </h2>
         <p>
-          <span lang="en">Dashboards make you go looking. With zman you just ask: how the week went, what ate your afternoon, when you actually focus. Claude reads your real numbers and answers.</span>
-          <span lang="es">Los dashboards te obligan a ir a buscar. Con zman simplemente preguntás: cómo fue la semana, qué se comió tu tarde, cuándo te concentrás de verdad. Claude lee tus números reales y responde.</span>
+          Dashboards make you go looking. With zman you just ask: how the week went, what ate your afternoon, when you actually focus. Claude reads your real numbers and answers.
+          
         </p>
         <ul class="ticks">
-          <li><span lang="en"><b>One click.</b> Press Connect in the app and Claude Desktop has the zman tools.</span><span lang="es"><b>Un clic.</b> Tocás Conectar en la app y Claude Desktop ya tiene las herramientas de zman.</span></li>
-          <li><span lang="en"><b>Only totals.</b> Claude gets time per category, app and site. Never window titles, never what you typed.</span><span lang="es"><b>Solo totales.</b> Claude recibe tiempo por categoría, app y sitio. Nunca títulos de ventana, nunca lo que escribiste.</span></li>
-          <li><span lang="en"><b>It can help you focus.</b> Say "block my distractions for an hour" and Claude starts a focus session. Only if you allow it; everything else is read-only.</span><span lang="es"><b>Te ayuda a concentrarte.</b> Decile "bloqueame las distracciones por una hora" y Claude inicia una sesión de foco. Solo si lo permitís; todo lo demás es de solo lectura.</span></li>
-          <li><span lang="en"><b>ChatGPT too.</b> Run your own zman server and connect ChatGPT or Claude on the web by signing in.</span><span lang="es"><b>También ChatGPT.</b> Levantá tu propio servidor zman y conectá ChatGPT o Claude en la web iniciando sesión.</span></li>
+          <li><b>One click.</b> Press Connect in the app and Claude Desktop has the zman tools.</li>
+          <li><b>Only totals.</b> Claude gets time per category, app and site. Never window titles, never what you typed.</li>
+          <li><b>It can help you focus.</b> Say "block my distractions for an hour" and Claude starts a focus session. Only if you allow it; everything else is read-only.</li>
+          <li><b>ChatGPT too.</b> Run your own zman server and connect ChatGPT or Claude on the web by signing in.</li>
         </ul>
       </div>
 
       <div class="chat" aria-label="Example conversation">
         <div class="bubble user">
-          <span lang="en">Where did my week go?</span><span lang="es">¿En qué se me fue la semana?</span>
+          Where did my week go?
         </div>
         <div class="tool"><i></i>zman · weekly_summary</div>
         <div class="bubble bot">
-          <span lang="en">You tracked <b>41h 39m</b> with a productivity score of <b>87/100</b>. Development took <b>23h 38m</b> (57%), other work 9h 56m and communication 4h 05m. Friday was your longest day at 8h 01m. Entertainment added up to 2h 42m, mostly YouTube.</span>
-          <span lang="es">Registraste <b>41 h 39 min</b> con una productividad de <b>87/100</b>. Desarrollo se llevó <b>23 h 38 min</b> (57%), otro trabajo 9 h 56 min y comunicación 4 h 05 min. El viernes fue tu día más largo, con 8 h 01 min. Entretenimiento sumó 2 h 42 min, sobre todo YouTube.</span>
+          You tracked <b>41h 39m</b> with a productivity score of <b>87/100</b>. Development took <b>23h 38m</b> (57%), other work 9h 56m and communication 4h 05m. Friday was your longest day at 8h 01m. Entertainment added up to 2h 42m, mostly YouTube.
+          
         </div>
         <div class="bubble user">
-          <span lang="en">And compared with the week before?</span><span lang="es">¿Y comparado con la semana anterior?</span>
+          And compared with the week before?
         </div>
         <div class="tool"><i></i>zman · compare_periods</div>
         <div class="bubble bot">
-          <span lang="en">About 7 hours less tracked, and productivity went from 87 to 84. Development dropped 13% while communication grew 12%.</span>
-          <span lang="es">Unas 7 horas menos registradas, y la productividad pasó de 87 a 84. Desarrollo bajó 13% mientras comunicación subió 12%.</span>
+          About 7 hours less tracked, and productivity went from 87 to 84. Development dropped 13% while communication grew 12%.
+          
         </div>
         <div class="bubble user">
-          <span lang="en">Block my distractions for 50 minutes.</span><span lang="es">Bloqueame las distracciones por 50 minutos.</span>
+          Block my distractions for 50 minutes.
         </div>
         <div class="tool"><i></i>zman · start_focus</div>
         <div class="bubble bot">
-          <span lang="en">Done. Focus mode is on until 16:20: YouTube, social media and the rest of your distracting sites are blocked.</span>
-          <span lang="es">Listo. El modo foco está activo hasta las 16:20: YouTube, redes sociales y el resto de tus sitios que distraen quedan bloqueados.</span>
+          Done. Focus mode is on until 16:20: YouTube, social media and the rest of your distracting sites are blocked.
+          
         </div>
-        <p class="chat-note"><span lang="en">Illustrative example, using the demo data below.</span><span lang="es">Ejemplo ilustrativo, con los datos de la demo de abajo.</span></p>
+        <p class="chat-note">Illustrative example, using the demo data below.</p>
       </div>
     </section>
 
     <section id="demo" class="demo">
-      <h2><span lang="en">This is the app. Go ahead, click around.</span><span lang="es">Esta es la app. Dale, tocá lo que quieras.</span></h2>
+      <h2>This is the app. Go ahead, click around.</h2>
       <p class="section-lead">
-        <span lang="en">The real dashboard running on made-up data. Switch between day and week, hover the chart, open Focus, click an app to change its category.</span>
-        <span lang="es">El dashboard real corriendo sobre datos inventados. Cambiá entre día y semana, pasá el mouse por el gráfico, abrí Foco, tocá una app para cambiarle la categoría.</span>
+        The real dashboard running on made-up data. Switch between day and week, hover the chart, open Focus, click an app to change its category.
+        
       </p>
       <div class="window">
         <div class="window-bar"><i></i><i></i><i></i><span>zman</span></div>
-        <iframe id="demo-frame" title="zman dashboard demo" loading="lazy"></iframe>
+        <iframe id="demo-frame" title="zman dashboard demo" loading="lazy" src="demo/index.html?lang=en"></iframe>
       </div>
     </section>
 
     <section class="features">
-      <h2><span lang="en">Everything it does</span><span lang="es">Todo lo que hace</span></h2>
+      <h2>Everything it does</h2>
       <div class="grid">
         <article>
-          <h3><span lang="en">Tracks by itself</span><span lang="es">Registra solo</span></h3>
-          <p><span lang="en">Lives in the system tray and starts with your computer. When you step away, the clock stops.</span><span lang="es">Vive en la bandeja del sistema e inicia con tu computadora. Cuando te alejás, el reloj se detiene.</span></p>
+          <h3>Tracks by itself</h3>
+          <p>Lives in the system tray and starts with your computer. When you step away, the clock stops.</p>
         </article>
         <article>
-          <h3><span lang="en">Categories and a score</span><span lang="es">Categorías y puntaje</span></h3>
-          <p><span lang="en">Apps and sites fall into categories with a productivity score from 0 to 100. Click any app or site to move it, and your whole history follows.</span><span lang="es">Las apps y sitios caen en categorías con un puntaje de productividad de 0 a 100. Tocás cualquier app o sitio para moverlo, y todo tu historial se actualiza.</span></p>
+          <h3>Categories and a score</h3>
+          <p>Apps and sites fall into categories with a productivity score from 0 to 100. Click any app or site to move it, and your whole history follows.</p>
         </article>
         <article>
-          <h3><span lang="en">Focus mode</span><span lang="es">Modo foco</span></h3>
-          <p><span lang="en">One click and distracting sites are blocked for 25, 50 or 90 minutes, with a countdown where the site used to be.</span><span lang="es">Un clic y los sitios que distraen quedan bloqueados por 25, 50 o 90 minutos, con una cuenta regresiva donde antes estaba el sitio.</span></p>
+          <h3>Focus mode</h3>
+          <p>One click and distracting sites are blocked for 25, 50 or 90 minutes, with a countdown where the site used to be.</p>
         </article>
         <article>
-          <h3><span lang="en">Daily limits and focus hours</span><span lang="es">Límites diarios y horarios</span></h3>
-          <p><span lang="en">"YouTube, 30 minutes a day." "No social media from 9 to 6." When the time runs out, the site is blocked until tomorrow.</span><span lang="es">"YouTube, 30 minutos por día." "Sin redes de 9 a 18." Cuando se acaba el tiempo, el sitio queda bloqueado hasta mañana.</span></p>
+          <h3>Daily limits and focus hours</h3>
+          <p>"YouTube, 30 minutes a day." "No social media from 9 to 6." When the time runs out, the site is blocked until tomorrow.</p>
         </article>
         <article>
-          <h3><span lang="en">Goals and gentle nudges</span><span lang="es">Metas y avisos</span></h3>
-          <p><span lang="en">Set a daily goal of productive hours. zman tells you when you reach it, when you have drifted for a while, and how your week went.</span><span lang="es">Fijá una meta diaria de horas productivas. zman te avisa cuando la cumplís, cuando llevás un rato disperso y cómo fue tu semana.</span></p>
+          <h3>Goals and gentle nudges</h3>
+          <p>Set a daily goal of productive hours. zman tells you when you reach it, when you have drifted for a while, and how your week went.</p>
         </article>
         <article>
-          <h3><span lang="en">Focus blocks</span><span lang="es">Bloques de foco</span></h3>
-          <p><span lang="en">See the stretches of 25 minutes or more of real work, and what broke them.</span><span lang="es">Mirá los tramos de 25 minutos o más de trabajo real, y qué los cortó.</span></p>
+          <h3>Focus blocks</h3>
+          <p>See the stretches of 25 minutes or more of real work, and what broke them.</p>
         </article>
         <article>
-          <h3><span lang="en">Sites, not just "Chrome"</span><span lang="es">Sitios, no solo "Chrome"</span></h3>
-          <p><span lang="en">zman knows which site you are on and categorizes by site: YouTube is entertainment, GitHub is work. Nothing to install in the browser, and private windows are skipped.</span><span lang="es">zman sabe en qué sitio estás y categoriza según el sitio: YouTube es entretenimiento, GitHub es trabajo. Sin instalar nada en el navegador, y las ventanas privadas se saltean.</span></p>
+          <h3>Sites, not just "Chrome"</h3>
+          <p>zman knows which site you are on and categorizes by site: YouTube is entertainment, GitHub is work. Nothing to install in the browser, and private windows are skipped.</p>
         </article>
         <article>
-          <h3><span lang="en">All your devices</span><span lang="es">Todos tus dispositivos</span></h3>
-          <p><span lang="en">Optional sync to a server you host yourself with Docker. Computers and an Android phone in one place.</span><span lang="es">Sync opcional a un servidor que alojás vos con Docker. Computadoras y un teléfono Android en un solo lugar.</span></p>
+          <h3>All your devices</h3>
+          <p>Optional sync to a server you host yourself with Docker. Computers and an Android phone in one place.</p>
         </article>
         <article>
-          <h3><span lang="en">A terminal, if you like</span><span lang="es">Una terminal, si preferís</span></h3>
-          <p><span lang="en"><code>zman today</code>, <code>zman week</code>, <code>zman export</code>. The same reports with bars and colors, and your data as CSV.</span><span lang="es"><code>zman today</code>, <code>zman week</code>, <code>zman export</code>. Los mismos reportes con barras y colores, y tus datos en CSV.</span></p>
+          <h3>A terminal, if you like</h3>
+          <p><code>zman today</code>, <code>zman week</code>, <code>zman export</code>. The same reports with bars and colors, and your data as CSV.</p>
         </article>
       </div>
     </section>
 
     <section id="privacy" class="privacy">
       <div>
-        <h2><span lang="en">Private by design</span><span lang="es">Privado por diseño</span></h2>
-        <p class="section-lead"><span lang="en">The code is open: you can check every one of these.</span><span lang="es">El código es abierto: podés verificar cada una de estas.</span></p>
+        <h2>Private by design</h2>
+        <p class="section-lead">The code is open: you can check every one of these.</p>
       </div>
       <ul class="ticks">
-        <li><span lang="en">Never records keystrokes or what is on your screen.</span><span lang="es">Nunca registra teclas ni lo que hay en tu pantalla.</span></li>
-        <li><span lang="en">Data lives in a file on your computer. No account needed.</span><span lang="es">Los datos viven en un archivo en tu computadora. No hace falta cuenta.</span></li>
-        <li><span lang="en">Exclude any app, window title or site: it is never written to disk.</span><span lang="es">Excluí cualquier app, título de ventana o sitio: nunca se escribe en disco.</span></li>
-        <li><span lang="en">Private browser windows are never reported.</span><span lang="es">Las ventanas privadas del navegador nunca se informan.</span></li>
-        <li><span lang="en">If you sync, it is to your own server, and window titles can stay home.</span><span lang="es">Si sincronizás, es a tu propio servidor, y los títulos de ventana pueden quedarse en casa.</span></li>
+        <li>Never records keystrokes or what is on your screen.</li>
+        <li>Data lives in a file on your computer. No account needed.</li>
+        <li>Exclude any app, window title or site: it is never written to disk.</li>
+        <li>Private browser windows are never reported.</li>
+        <li>If you sync, it is to your own server, and window titles can stay home.</li>
       </ul>
     </section>
 
     <section id="services" class="services">
-      <h2><span lang="en">Need more than the app?</span><span lang="es">¿Necesitás más que la app?</span></h2>
+      <h2>Need more than the app?</h2>
       <p class="section-lead">
-        <span lang="en">zman is free and open source. We also set it up and build on it for teams and families. These are services done to order, not features of the free app.</span>
-        <span lang="es">zman es gratis y open source. Además lo instalamos y construimos sobre él para equipos y familias. Son servicios a medida, no funciones de la app gratuita.</span>
+        zman is free and open source. We also set it up and build on it for teams and families. These are services done to order, not features of the free app.
+        
       </p>
       <div class="grid three">
         <article>
-          <p class="tag"><span lang="en">For companies</span><span lang="es">Para empresas</span></p>
-          <h3><span lang="en">Visibility across your computers</span><span lang="es">Visibilidad sobre tus computadoras</span></h3>
-          <p><span lang="en">We deploy zman on your team's machines with a private server of your own, and build the reports you need: time per project, tool usage, focus time. Done transparently, with your people informed, and without screenshots or keystrokes.</span><span lang="es">Desplegamos zman en las máquinas de tu equipo con un servidor privado propio, y armamos los reportes que necesitás: tiempo por proyecto, uso de herramientas, tiempo de foco. De forma transparente, con tu gente informada, y sin capturas de pantalla ni registro de teclas.</span></p>
+          <p class="tag">For companies</p>
+          <h3>Visibility across your computers</h3>
+          <p>We deploy zman on your team's machines with a private server of your own, and build the reports you need: time per project, tool usage, focus time. Done transparently, with your people informed, and without screenshots or keystrokes.</p>
         </article>
         <article>
-          <p class="tag"><span lang="en">For families</span><span lang="es">Para familias</span></p>
-          <h3><span lang="en">Know how your kids use the computer</span><span lang="es">Sabé cómo usan la compu tus hijos</span></h3>
-          <p><span lang="en">We set up zman on the family computers so you can see screen time by app and site, and ask about it from your phone. Daily limits and site blocking already work in the browser; controls a child cannot switch off are in development. Tell us what you need.</span><span lang="es">Instalamos zman en las computadoras de la familia para que veas el tiempo de pantalla por app y sitio, y lo consultes desde tu teléfono. Los límites diarios y el bloqueo de sitios ya funcionan en el navegador; los controles que un chico no pueda desactivar están en desarrollo. Contanos qué necesitás.</span></p>
+          <p class="tag">For families</p>
+          <h3>Know how your kids use the computer</h3>
+          <p>We set up zman on the family computers so you can see screen time by app and site, and ask about it from your phone. Daily limits and site blocking already work in the browser; controls a child cannot switch off are in development. Tell us what you need.</p>
         </article>
         <article>
-          <p class="tag"><span lang="en">Custom</span><span lang="es">A medida</span></p>
-          <h3><span lang="en">Hosting, integrations and support</span><span lang="es">Hosting, integraciones y soporte</span></h3>
-          <p><span lang="en">We host and maintain your zman server, connect it to your AI assistant, and adapt categories and reports to how you work.</span><span lang="es">Alojamos y mantenemos tu servidor zman, lo conectamos con tu asistente de IA y adaptamos categorías y reportes a tu forma de trabajar.</span></p>
+          <p class="tag">Custom</p>
+          <h3>Hosting, integrations and support</h3>
+          <p>We host and maintain your zman server, connect it to your AI assistant, and adapt categories and reports to how you work.</p>
         </article>
       </div>
       <div class="cta center">
         <a class="btn" id="contact" href="https://github.com/MalkSof/zman/issues/new?title=Services">
-          <span lang="en">Talk to us</span><span lang="es">Hablemos</span>
+          Talk to us
         </a>
+      </div>
+    </section>
+
+    <section id="faq" class="faq">
+      <h2>Questions people ask</h2>
+      <div class="faq-list">
+        <details><summary>Is zman free?</summary><p>Yes. zman is free and open source under the MIT license. There is no account, no trial and no paid plan: you download it and it works.</p></details>
+        <details><summary>Is it an alternative to RescueTime?</summary><p>Yes. Like RescueTime, zman tracks the apps and websites you use automatically and gives you a productivity score, categories and focus time. The difference is that zman is open source and keeps your data in a file on your own computer instead of in someone else&#x27;s cloud.</p></details>
+        <details><summary>How does it work with Claude and ChatGPT?</summary><p>zman speaks MCP, the protocol AI assistants use to reach tools. Press Connect in the app and Claude Desktop can answer questions like &quot;where did my week go?&quot; from your real numbers. With your own zman server, ChatGPT and Claude on the web connect too. Assistants only receive totals, never window titles.</p></details>
+        <details><summary>Can it block distracting websites?</summary><p>Yes. Start a focus session to block entertainment and social media for 25, 50 or 90 minutes, set daily limits such as &quot;YouTube, 30 minutes a day&quot;, or block sites during your working hours. Blocking uses the zman browser extension.</p></details>
+        <details><summary>What does zman record? Is it private?</summary><p>Only the name of the app in use, the window title, the address of the site in your browser and for how long. It never records keystrokes, screenshots or the content of pages, and it skips private browser windows. Nothing leaves your computer unless you sign in to a server you run yourself.</p></details>
+        <details><summary>Which systems does it support?</summary><p>Windows 10 and 11 today, with an Android companion app for phone usage. macOS and Linux are not supported yet.</p></details>
       </div>
     </section>
 
     <section class="start" id="download">
-      <h2><span lang="en">Install it in a minute</span><span lang="es">Instalalo en un minuto</span></h2>
-      <p class="section-lead"><span lang="en">Free and open source, for Windows 10 and 11.</span><span lang="es">Gratis y open source, para Windows 10 y 11.</span></p>
+      <h2>Install it in a minute</h2>
+      <p class="section-lead">Free and open source, for Windows 10 and 11.</p>
       <div class="cta center">
         <a class="btn" href="https://github.com/MalkSof/zman/releases/latest">
-          <span lang="en">Download for Windows</span><span lang="es">Descargar para Windows</span>
+          Download for Windows
         </a>
         <a class="btn ghost" href="https://github.com/MalkSof/zman">
-          <span lang="en">See the code</span><span lang="es">Ver el código</span>
+          See the code
         </a>
       </div>
-      <p class="small-note"><span lang="en">The installer is not code-signed yet: Windows will ask you to confirm with "More info" and "Run anyway". macOS and Linux are not supported yet.</span><span lang="es">El instalador todavía no está firmado: Windows te va a pedir confirmar con "Más información" y "Ejecutar de todas formas". macOS y Linux todavía no están soportados.</span></p>
+      <p class="small-note">The installer is not code-signed yet: Windows will ask you to confirm with "More info" and "Run anyway". macOS and Linux are not supported yet.</p>
     </section>
   </main>
 
   <footer>
-    <span>zman · MIT</span>
+    <span>zman · free and open source time tracker · MIT</span>
     <a href="https://github.com/MalkSof/zman">github.com/MalkSof/zman</a>
   </footer>
 
   <script>
-    const root = document.documentElement;
-    const frame = document.getElementById("demo-frame");
-    function setLang(lang) {
-      root.dataset.lang = lang;
-      root.lang = lang;
-      frame.src = "demo/index.html?lang=" + lang;
-      document.title = lang === "es"
-        ? "zman — sabé a dónde se va tu tiempo, y preguntáselo a Claude"
-        : "zman — know where your time goes, and ask Claude about it";
-      try { localStorage.setItem("zman-lang", lang); } catch {}
+    // Each language has its own page. Remember the choice; on a first visit
+    // from a Spanish browser, go to the Spanish page.
+    const page = document.documentElement.dataset.lang;
+    for (const link of document.querySelectorAll("#lang-toggle a")) {
+      link.addEventListener("click", () => { try { localStorage.setItem("zman-lang", link.dataset.code); } catch {} });
     }
     let saved = null;
     try { saved = localStorage.getItem("zman-lang"); } catch {}
-    const asked = new URLSearchParams(location.search).get("lang");
-    const browser = (navigator.language || "").toLowerCase().startsWith("es") ? "es" : "en";
-    setLang(["en", "es"].includes(asked) ? asked : saved || browser);
-    document.getElementById("lang-toggle").addEventListener("click", () => {
-      setLang(root.dataset.lang === "es" ? "en" : "es");
-    });
+    const wanted = saved || ((navigator.language || "").toLowerCase().startsWith("es") ? "es" : "en");
+    if (wanted !== page && !location.hash) location.replace(document.querySelector(`#lang-toggle a[data-code="${wanted}"]`).href);
   </script>
 </body>
 </html>

@@ -98,6 +98,13 @@ os.makedirs(OUT, exist_ok=True)
 for folder in (UI, OUT):
     with io.open(os.path.join(folder, "mock.js"), "w", encoding="utf-8", newline="\n") as f:
         f.write(mock)
-for name in ("index.html", "style.css", "app.js"):
+for name in ("style.css", "app.js"):
     shutil.copyfile(os.path.join(UI, name), os.path.join(OUT, name))
+# The demo is part of the home page; search engines should not list it alone.
+page = io.open(os.path.join(UI, "index.html"), encoding="utf-8").read()
+page = page.replace("<title>", '<meta name="robots" content="noindex">
+  <title>', 1)
+with io.open(os.path.join(OUT, "index.html"), "w", encoding="utf-8", newline="
+") as f:
+    f.write(page)
 print("demo data rebuilt for", day)

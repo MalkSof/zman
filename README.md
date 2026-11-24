@@ -237,6 +237,7 @@ minutes. Open the folder in Android Studio and run it on a phone.
 - `crates/mcp` — MCP protocol and tools, shared by the local and remote servers.
 - `crates/desktop` — Tauri app; the dashboard is plain HTML/CSS/JS in `ui/`.
 - `crates/server` — sync API, OAuth and remote MCP (Axum + Postgres).
+- `site/` — source of the website; `python scripts/build_site.py` writes it to `docs/`, which GitHub Pages serves.
 - `extension/` — browser extension. `android/` — Android app. `deploy/` — Docker Compose.
 
 Demo data, to try the reports and dashboard right away:
