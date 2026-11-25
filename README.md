@@ -8,7 +8,7 @@ how long, shows you where your time goes, and lets your AI assistant answer
 questions about it. Your data stays on your machine unless you choose to sync
 it to your own server.
 
-Website and live demo: https://malksof.github.io/zman/
+Website and live demo: https://zman.malkadigital.com/
 
 > Status: early. Developed and tested on Windows. See
 > [what has been verified](#what-has-been-verified).

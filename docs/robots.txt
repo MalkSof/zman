@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://malksof.github.io/zman/sitemap.xml
+Sitemap: https://zman.malkadigital.com/sitemap.xml
