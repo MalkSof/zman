@@ -26,6 +26,12 @@ if os.path.exists(os.path.join(SRC, "CNAME")):
     URL = "https://%s/" % io.open(os.path.join(SRC, "CNAME"), encoding="utf-8").read().strip()
 REPO = "https://github.com/MalkSof/zman"
 VERSION = "0.2.0"
+# Where "Join the waitlist" leads. Put the address of a form here (one that
+# collects an email) to replace the default, which opens a GitHub issue.
+WAITLIST = {
+    "cloud": REPO + "/issues/new?title=Waitlist%3A+zman+Cloud&body=I+want+to+know+when+zman+Cloud+opens.",
+    "teams": REPO + "/issues/new?title=Waitlist%3A+zman+for+teams&body=I+want+to+know+when+zman+for+teams+opens.%0A%0AHow+many+people%3A+",
+}
 
 PAGES = {
     "en": {
@@ -184,6 +190,8 @@ for lang, page in PAGES.items():
         "head": head(lang),
         "faq": faq(lang),
         "posts": latest(lang, root),
+        "waitlist_cloud": html.escape(WAITLIST["cloud"], quote=True),
+        "waitlist_teams": html.escape(WAITLIST["teams"], quote=True),
         "blog": root + page["path"] + "blog/",
         "en": root or "./",
         "es": root + PAGES["es"]["path"],

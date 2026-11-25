@@ -265,6 +265,15 @@ ZMAN_HOME=./demo cargo run -p zman-cli -- week
   servidor desplegado. macOS y Linux necesitan una implementación de
   `Platform`.
 
-## Licencia
+## Licencia y qué es abierto
 
-MIT
+MIT. La app de escritorio, el CLI, la extensión de navegador, la app
+Android, el servidor MCP y el servidor de sync de este repositorio son open
+source y lo van a seguir siendo: podés correr todo vos mismo, gratis.
+
+Los servicios pagos construidos sobre zman (un servicio de sync alojado y un
+panel para equipos y familias) son productos aparte y no forman parte de
+este repositorio.
+
+zman no envía ninguna información a otras computadoras salvo que se lo
+pidas, iniciando sesión en un servidor de sync que vos elegís.

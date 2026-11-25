@@ -124,6 +124,9 @@ main > section { max-width: 1180px; margin: 0 auto; padding: 88px 24px; }
 /* ---------- Grids ---------- */
 
 .grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 18px; margin-top: 40px; }
+.grid.two { grid-template-columns: repeat(2, minmax(0, 1fr)); max-width: 860px; margin-inline: auto; }
+.grid.two .btn { margin-top: 18px; padding: 9px 18px; }
+.services .eyebrow { margin-bottom: 12px; }
 .grid article { padding: 26px; border-radius: 18px; background: var(--surface); border: 1px solid var(--border); }
 .grid article p { color: var(--ink-2); margin-top: 8px; font-size: 16px; }
 .tag { display: inline-block; margin: 0 0 12px !important; padding: 3px 11px; border-radius: 999px; background: var(--accent-soft); color: var(--accent) !important; font-size: 12.5px !important; font-weight: 600; }
@@ -196,6 +199,6 @@ footer { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 12
   main > section { padding: 64px 20px; }
   .hero { padding-top: 72px; }
   .claude, .privacy { grid-template-columns: minmax(0, 1fr); gap: 36px; }
-  .grid, .post-list.three { grid-template-columns: minmax(0, 1fr); }
+  .grid, .grid.two, .post-list.three { grid-template-columns: minmax(0, 1fr); }
   .window iframe { height: 1180px; }
 }

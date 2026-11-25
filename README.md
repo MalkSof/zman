@@ -260,6 +260,15 @@ ZMAN_HOME=./demo cargo run -p zman-cli -- week
   Android SDK at hand), and connecting ChatGPT or Claude on the web to a
   deployed server. macOS and Linux need a `Platform` implementation.
 
-## License
+## License and what is open
 
-MIT
+MIT. The desktop app, the CLI, the browser extension, the Android app, the
+MCP server and the sync server in this repository are open source and will
+stay that way: you can run all of it yourself, for free.
+
+Paid services built on top of zman (a hosted sync service, and a panel for
+teams and families) are separate products and are not part of this
+repository.
+
+zman does not send any information to other computers unless you ask it to,
+by signing in to a sync server you choose.
