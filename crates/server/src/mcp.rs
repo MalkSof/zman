@@ -52,7 +52,7 @@ pub async fn handle(State(state): State<AppState>, headers: HeaderMap, Json(mess
 
     let source = UserEvents { db: state.db.clone(), user_id: user.id.clone(), runtime: Handle::current() };
     let reply = tokio::task::spawn_blocking(move || {
-        let server = Server { source: &source, categories: categories_of(&user), default_tz: time_zone_of(&user), focus: None };
+        let server = Server { source: &source, categories: categories_of(&user), default_tz: time_zone_of(&user), focus: None, clients: None };
         server.handle(&message)
     })
     .await;

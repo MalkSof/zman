@@ -91,6 +91,14 @@
       <div class="chart" id="chart"></div>
     </section>
 
+    <section class="card" id="clients-card">
+      <div class="card-head">
+        <h2 data-i18n="clientsTitle"></h2>
+        <button class="ghost-btn" id="clients-edit" data-i18n="clientsEdit"></button>
+      </div>
+      <div id="clients-body"></div>
+    </section>
+
     <section class="columns">
       <div class="card">
         <div class="card-head"><h2 data-i18n="categories"></h2></div>
@@ -258,6 +266,25 @@
 
     <p class="conn-note" data-i18n="extensionNote"></p>
     <p class="conn-error" id="focus-error" hidden></p>
+  </dialog>
+
+  <dialog id="clients-dialog" aria-labelledby="clients-dialog-title">
+    <div class="dialog-head">
+      <div>
+        <h2 id="clients-dialog-title" data-i18n="clientsDialogTitle"></h2>
+        <p data-i18n="clientsDialogLead"></p>
+      </div>
+      <button class="icon-btn" id="clients-close" data-i18n-title="close">
+        <svg viewBox="0 0 16 16" width="16" height="16"><path d="m4 4 8 8M12 4l-8 8" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+      </button>
+    </div>
+    <div id="client-suggestions"></div>
+    <div id="client-editors"></div>
+    <div class="add-row">
+      <button class="primary-btn" id="client-add" data-i18n="clientAdd"></button>
+    </div>
+    <p class="conn-note" data-i18n="clientsPrivacy"></p>
+    <p class="conn-error" id="clients-error" hidden></p>
   </dialog>
 
   <div class="menu cat-menu" id="cat-menu" hidden></div>

@@ -27,9 +27,52 @@ const NAMES: &[&str] = &[
 ];
 
 const FOCUS_NAMES: &[&str] = &["start_focus", "stop_focus"];
+const CLIENT_NAMES: &[&str] = &["time_by_client", "record_payment"];
 
-pub fn exists(name: &str, with_focus: bool) -> bool {
-    NAMES.contains(&name) || (with_focus && FOCUS_NAMES.contains(&name))
+pub fn exists(name: &str, with_focus: bool, with_clients: bool) -> bool {
+    NAMES.contains(&name) || (with_focus && FOCUS_NAMES.contains(&name)) || (with_clients && CLIENT_NAMES.contains(&name))
+}
+
+/// Clients and payments. Only offered where zman runs on the user's own computer.
+pub fn client_definitions() -> Value {
+    let date = |description: &str| json!({ "type": "string", "format": "date", "description": description });
+    json!([
+        {
+            "name": "time_by_client",
+            "description": "Hours spent on each of the user's clients over a date range, recognised \
+                automatically from the activity, plus what each client paid in that range and the \
+                real rate per hour (paid / hours). Own projects count hours but have no rate. Also \
+                returns time that matched no client.",
+            "inputSchema": {
+                "type": "object",
+                "properties": {
+                    "from": date("First day of the range (YYYY-MM-DD)."),
+                    "to": date("Last day of the range, inclusive (YYYY-MM-DD)."),
+                    "timezone": { "type": "string", "description": "IANA time zone. Defaults to the user's." },
+                },
+                "required": ["from", "to"],
+            },
+            "annotations": { "readOnlyHint": true, "openWorldHint": false },
+        },
+        {
+            "name": "record_payment",
+            "description": "Saves a payment from one of the user's clients (money received or billed), \
+                so time_by_client can compute the rate per hour. Use it when the user tells you a \
+                client paid them. The client must already exist in the zman app.",
+            "inputSchema": {
+                "type": "object",
+                "properties": {
+                    "client": { "type": "string", "description": "Client name, as in the zman app." },
+                    "amount": { "type": "number", "exclusiveMinimum": 0 },
+                    "currency": { "type": "string", "default": "ARS", "description": "ARS, USD..." },
+                    "date": date("Day of the payment (YYYY-MM-DD). Defaults to today."),
+                    "note": { "type": "string", "description": "Optional, e.g. the invoice number." },
+                },
+                "required": ["client", "amount"],
+            },
+            "annotations": { "readOnlyHint": false, "destructiveHint": false, "idempotentHint": false, "openWorldHint": false },
+        },
+    ])
 }
 
 /// The two tools that act instead of reporting. Only offered where zman
@@ -162,6 +205,8 @@ pub fn call(server: &Server<'_>, name: &str, args: &Value) -> Result<Value, Stri
         "focus_blocks" => ctx.focus_blocks(args),
         "start_focus" => ctx.start_focus(args),
         "stop_focus" => ctx.stop_focus(),
+        "time_by_client" => ctx.time_by_client(args),
+        "record_payment" => ctx.record_payment(args),
         _ => Err(format!("Unknown tool: {name}")),
     }
 }
@@ -191,6 +236,45 @@ impl Ctx<'_> {
         let focus = self.server.focus.ok_or("Focus sessions are not available here.")?;
         focus.stop_focus()?;
         Ok(json!({ "focus": "off" }))
+    }
+
+    fn time_by_client(&self, args: &Value) -> Result<Value, String> {
+        let book = self.server.clients.ok_or("Clients are not available here.")?;
+        let clients = book.clients()?;
+        if clients.is_empty() {
+            return Err("The user has no clients yet. They can add them in the zman app, under Clients.".into());
+        }
+        let (from, to, range) = self.range(args, "from", "to")?;
+        let events = self.server.source.events_between(range)?;
+        let report = zman_core::client::report(&events, range, &clients, &self.tz);
+        let money = |list: &[zman_core::client::Money]| -> Value {
+            list.iter().map(|m| json!({ "currency": m.currency, "amount": m.amount })).collect()
+        };
+        Ok(json!({
+            "from": from.to_string(),
+            "to": to.to_string(),
+            "tracked_minutes": minutes(report.total_ms),
+            "unassigned_minutes": minutes(report.unassigned_ms),
+            "clients": report.clients.iter().map(|c| json!({
+                "name": c.name,
+                "own_project": c.own,
+                "minutes": minutes(c.ms),
+                "hours": format_duration(c.ms),
+                "paid": money(&c.paid),
+                "per_hour": money(&c.per_hour),
+            })).collect::<Vec<_>>(),
+        }))
+    }
+
+    fn record_payment(&self, args: &Value) -> Result<Value, String> {
+        let book = self.server.clients.ok_or("Clients are not available here.")?;
+        let client = args.get("client").and_then(Value::as_str).ok_or("client is required")?;
+        let amount = args.get("amount").and_then(Value::as_f64).filter(|a| *a > 0.0).ok_or("amount must be a positive number")?;
+        let date = optional_date(args, "date")?.unwrap_or_else(|| period::today(&self.tz));
+        let currency = args.get("currency").and_then(Value::as_str).unwrap_or("ARS").trim().to_uppercase();
+        let note = args.get("note").and_then(Value::as_str).unwrap_or("").to_string();
+        book.record_payment(client, zman_core::Payment { date: date.to_string(), amount, currency: currency.clone(), note })?;
+        Ok(json!({ "saved": true, "client": client, "amount": amount, "currency": currency, "date": date.to_string() }))
     }
 
     fn daily_summary(&self, args: &Value) -> Result<Value, String> {

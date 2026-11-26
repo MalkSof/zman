@@ -7,6 +7,7 @@ use jiff::tz::TimeZone;
 use serde::{Deserialize, Serialize};
 
 use crate::category::{Categories, CategoryRule, domain_matches};
+use crate::client::Client;
 use crate::config::Config;
 use crate::error::Result;
 use crate::event::{Event, domain_of};
@@ -28,6 +29,8 @@ pub struct Settings {
     pub notifications: bool,
     /// Lets AI assistants start and stop focus sessions through MCP.
     pub assistant_focus: bool,
+    /// Who the user works for, how to recognise them, and what they paid.
+    pub clients: Vec<Client>,
 }
 
 impl Default for Settings {
@@ -38,6 +41,7 @@ impl Default for Settings {
             goal_minutes: 0,
             notifications: true,
             assistant_focus: false,
+            clients: Vec::new(),
         }
     }
 }

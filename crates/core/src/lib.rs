@@ -2,6 +2,7 @@
 //! Nothing in this crate is platform specific.
 
 pub mod category;
+pub mod client;
 pub mod config;
 pub mod error;
 pub mod event;
@@ -16,6 +17,7 @@ pub mod store;
 pub mod tracker;
 
 pub use category::{Categories, CategoryRule};
+pub use client::{Client, Payment};
 pub use config::Config;
 pub use error::{Error, Result};
 pub use event::Event;

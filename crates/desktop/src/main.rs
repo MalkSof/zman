@@ -116,7 +116,9 @@ fn main() {
             save_settings,
             set_focus,
             set_category,
-            export_csv
+            export_csv,
+            get_clients,
+            save_clients
         ])
         .setup(|app| {
             build_tray(app.handle())?;
@@ -276,6 +278,8 @@ fn save_settings(state: State<'_, AppState>, settings: Settings) -> Result<Value
     let mut next = settings;
     next.block.focus_until_ms = current.block.focus_until_ms;
     next.overrides = current.overrides;
+    // Clients have their own dialog and command.
+    next.clients = current.clients;
     let clean = |list: &mut Vec<String>| {
         for item in list.iter_mut() {
             // People paste addresses: keep just the site.
@@ -313,6 +317,111 @@ fn set_category(state: State<'_, AppState>, kind: String, name: String, category
     let mut settings = Settings::load(&store).map_err(|e| e.to_string())?;
     settings.set_override(&kind, &name, category.as_deref());
     settings.save(&store).map_err(|e| e.to_string())
+}
+
+// ---------- Clients ----------
+
+/// Hours and payments per client for the range on screen and for its month,
+/// the clients themselves (for the editor), and folders or sites that look
+/// like work for someone and match no client yet.
+fn clients_json(store: &Store, start_ms: i64, end_ms: i64) -> Result<Value, String> {
+    let text = |e: zman_core::Error| e.to_string();
+    let tz = TimeZone::system();
+    let clients = Settings::load(store).map_err(text)?.clients;
+    let range = zman_core::Range { start_ms, end_ms };
+
+    let day = period::date_of(start_ms, &tz);
+    let first = day.first_of_month();
+    let next = first.checked_add(jiff::Span::new().months(1)).map_err(|e| e.to_string())?;
+    let month = zman_core::Range {
+        start_ms: period::start_of_day(first, &tz).map_err(text)?,
+        end_ms: period::start_of_day(next, &tz).map_err(text)?,
+    };
+    let month_events = store.events_between(month).map_err(text)?;
+    let events = store.events_between(range).map_err(text)?;
+    let on_screen = zman_core::client::report(&events, range, &clients, &tz);
+    let in_month = zman_core::client::report(&month_events, month, &clients, &tz);
+
+    // Suggestions: project folders (terminal and editor titles) and sites
+    // with no client, over the last 30 days.
+    let recent = zman_core::Range { start_ms: now_ms() - 30 * 86_400_000, end_ms: now_ms() };
+    let mut seen: std::collections::HashMap<String, i64> = std::collections::HashMap::new();
+    for event in store.events_between(recent).map_err(text)? {
+        if zman_core::client::client_of(&clients, &event).is_some() {
+            continue;
+        }
+        if let Some(folder) = project_folder(&event) {
+            *seen.entry(folder).or_default() += event.duration_ms;
+        }
+    }
+    let mut suggestions: Vec<(String, i64)> = seen.into_iter().filter(|(_, ms)| *ms >= 10 * 60_000).collect();
+    suggestions.sort_by(|a, b| b.1.cmp(&a.1));
+    suggestions.truncate(8);
+
+    Ok(json!({
+        "clients": clients,
+        "period": on_screen,
+        "month": in_month,
+        "month_start": first.to_string(),
+        "suggestions": suggestions.iter().map(|(name, ms)| json!({ "name": name, "ms": ms })).collect::<Vec<_>>(),
+    }))
+}
+
+/// The project folder in a terminal title (`user: folder`) or an editor
+/// title (`file - folder - Visual Studio Code`).
+fn project_folder(event: &zman_core::Event) -> Option<String> {
+    let app = event.app.to_lowercase();
+    let title = event.title.trim();
+    let name = if app.contains("terminal") || app.contains("powershell") || app.contains("cmd") {
+        let tail = title.rsplit(':').next()?.trim();
+        tail.rsplit(['\\', '/']).next()?.trim().to_string()
+    } else if app == "code.exe" || app.contains("cursor") {
+        let parts: Vec<&str> = title.split(" - ").collect();
+        if parts.len() >= 3 { parts[parts.len() - 2].trim().to_string() } else { return None }
+    } else {
+        return None;
+    };
+    let name = name.trim_start_matches('~').trim().to_string();
+    let words = name.split_whitespace().count();
+    (!name.is_empty() && name.len() <= 40 && words <= 3 && !name.contains("Administrator")).then_some(name)
+}
+
+#[tauri::command(async)]
+fn get_clients(state: State<'_, AppState>, start_ms: i64, end_ms: i64) -> Result<Value, String> {
+    clients_json(&open_store(&state)?, start_ms, end_ms)
+}
+
+#[tauri::command(async)]
+fn save_clients(
+    state: State<'_, AppState>,
+    clients: Vec<zman_core::Client>,
+    start_ms: i64,
+    end_ms: i64,
+) -> Result<Value, String> {
+    let store = open_store(&state)?;
+    let mut settings = Settings::load(&store).map_err(|e| e.to_string())?;
+    let clean = |list: Vec<String>| -> Vec<String> {
+        let mut out: Vec<String> = list.into_iter().map(|s| s.trim().to_string()).filter(|s| !s.is_empty()).collect();
+        out.dedup();
+        out
+    };
+    settings.clients = clients
+        .into_iter()
+        .filter(|c| !c.name.trim().is_empty())
+        .map(|mut c| {
+            c.name = c.name.trim().to_string();
+            c.keywords = clean(c.keywords);
+            c.domains = clean(c.domains).into_iter().filter_map(|d| zman_core::event::domain_of(&d)).collect();
+            c.apps = clean(c.apps);
+            c.payments.retain(|p| p.amount > 0.0 && period::parse_date(&p.date).is_ok());
+            for p in &mut c.payments {
+                p.currency = if p.currency.trim().is_empty() { "ARS".into() } else { p.currency.trim().to_uppercase() };
+            }
+            c
+        })
+        .collect();
+    settings.save(&store).map_err(|e| e.to_string())?;
+    clients_json(&store, start_ms, end_ms)
 }
 
 /// Writes the events of the day or week on screen to a CSV file in the

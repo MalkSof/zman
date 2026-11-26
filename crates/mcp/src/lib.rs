@@ -31,6 +31,7 @@ pub fn serve_stdio() -> Result<(), Box<dyn std::error::Error>> {
         categories: settings.categories(&config, zman_core::Lang::detect()),
         default_tz: TimeZone::system(),
         focus: Some(&store),
+        clients: Some(&store),
     };
 
     let mut stdout = std::io::stdout().lock();
@@ -53,6 +54,8 @@ const PROTOCOL_VERSIONS: &[&str] = &["2025-11-25", "2025-06-18", "2025-03-26", "
 const INSTRUCTIONS: &str = "zman is an automatic time tracker. These tools report how the user \
 spent their time on their devices: totals per category, app and website, a productivity score \
 from 0 to 100, and focus blocks. All data is aggregated; window titles are never exposed. \
+When time_by_client is offered, use it for questions about clients: hours per client, what each \
+paid and the real rate per hour; record_payment saves a payment the user tells you about. \
 When start_focus is offered, use it to block distracting websites for a while if the user asks to focus. \
 Dates are YYYY-MM-DD in the user's time zone and ranges are inclusive.";
 
@@ -74,6 +77,31 @@ pub trait FocusControl {
     /// milliseconds since the Unix epoch.
     fn start_focus(&self, minutes: u32) -> Result<i64, String>;
     fn stop_focus(&self) -> Result<(), String>;
+}
+
+/// The user's clients and their payments (see `zman_core::client`).
+pub trait ClientBook {
+    fn clients(&self) -> Result<Vec<zman_core::Client>, String>;
+    /// Adds a payment to the client named `name` (ignoring case).
+    fn record_payment(&self, name: &str, payment: zman_core::Payment) -> Result<(), String>;
+}
+
+impl ClientBook for zman_core::Store {
+    fn clients(&self) -> Result<Vec<zman_core::Client>, String> {
+        Ok(zman_core::Settings::load(self).map_err(|e| e.to_string())?.clients)
+    }
+
+    fn record_payment(&self, name: &str, payment: zman_core::Payment) -> Result<(), String> {
+        let mut settings = zman_core::Settings::load(self).map_err(|e| e.to_string())?;
+        let names: Vec<String> = settings.clients.iter().map(|c| c.name.clone()).collect();
+        let client = settings
+            .clients
+            .iter_mut()
+            .find(|c| c.name.trim().eq_ignore_ascii_case(name.trim()))
+            .ok_or_else(|| format!("No client named \"{name}\". Clients: {}", names.join(", ")))?;
+        client.payments.push(payment);
+        settings.save(self).map_err(|e| e.to_string())
+    }
 }
 
 const FOCUS_NOT_ALLOWED: &str = "The user has not allowed assistants to control focus sessions. \
@@ -106,6 +134,8 @@ pub struct Server<'a> {
     /// Present only where focus sessions can be controlled: on the user's
     /// own computer. Without it the server is strictly read-only.
     pub focus: Option<&'a dyn FocusControl>,
+    /// Present only on the user's own computer, where clients and payments live.
+    pub clients: Option<&'a dyn ClientBook>,
     pub categories: Categories,
     /// Time zone used when a tool call does not name one.
     pub default_tz: TimeZone,
@@ -154,6 +184,11 @@ impl Server<'_> {
                 list.extend(extra);
             }
         }
+        if self.clients.is_some() {
+            if let (Some(list), Value::Array(extra)) = (list.as_array_mut(), tools::client_definitions()) {
+                list.extend(extra);
+            }
+        }
         list
     }
 
@@ -162,7 +197,7 @@ impl Server<'_> {
             .get("name")
             .and_then(Value::as_str)
             .ok_or((-32602, "Missing tool name".to_string()))?;
-        if !tools::exists(name, self.focus.is_some()) {
+        if !tools::exists(name, self.focus.is_some(), self.clients.is_some()) {
             return Err((-32602, format!("Unknown tool: {name}")));
         }
         let empty = json!({});
@@ -237,7 +272,7 @@ mod tests {
     }
 
     fn server(store: &Store) -> Server<'_> {
-        Server { source: store, categories: Categories::defaults(Lang::En), default_tz: TimeZone::UTC, focus: None }
+        Server { source: store, categories: Categories::defaults(Lang::En), default_tz: TimeZone::UTC, focus: None, clients: None }
     }
 
     fn call(server: &Server<'_>, name: &str, args: Value) -> (Value, bool) {

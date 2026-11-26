@@ -315,3 +315,26 @@ dialog::backdrop { background: rgba(0, 0, 0, 0.45); }
   .connect-btn { padding: 7px; }
   .status { padding: 6px; }
 }
+
+/* Clients */
+.ctable { width: 100%; border-collapse: collapse; font-size: 13.5px; font-variant-numeric: tabular-nums; }
+.ctable th { text-align: right; font-weight: 500; color: var(--muted); font-size: 12px; padding: 0 0 8px 12px; }
+.ctable th:first-child, .ctable td:first-child { text-align: left; padding-left: 0; }
+.ctable td { text-align: right; padding: 8px 0 8px 12px; border-top: 1px solid var(--border); white-space: nowrap; }
+.ctable td:first-child { width: 40%; white-space: normal; }
+.ctable td .row-bar { margin-top: 6px; }
+.ctable .rate { font-weight: 600; }
+.ctable tr.muted td { color: var(--muted); }
+.tag { font-style: normal; font-size: 11px; color: var(--muted); border: 1px solid var(--border); border-radius: 999px; padding: 0 7px; margin-left: 4px; }
+.clients-empty { display: flex; align-items: center; justify-content: space-between; gap: 20px; flex-wrap: wrap; }
+.clients-empty .hint { max-width: 620px; }
+.client-edit .field { display: grid; gap: 4px; margin-top: 10px; font-size: 12.5px; color: var(--ink-2); }
+.client-edit .field input, .client-edit select { padding: 7px 10px; border: 1px solid var(--border); border-radius: 8px; background: transparent; color: var(--ink); font: inherit; font-size: 13px; }
+.client-edit .field-pair { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.client-edit .name { font-weight: 600; font-size: 14.5px; }
+.client-edit h3.sub { margin-top: 14px; font-size: 13px; }
+.add-row .wide { width: 120px; }
+.chip-btn { border: 1px dashed var(--axis); background: none; color: var(--ink); border-radius: 999px; padding: 4px 12px; cursor: pointer; font: inherit; font-size: 13px; }
+.chip-btn:hover { border-color: var(--accent); color: var(--accent); }
+.chip-btn small { color: var(--muted); margin-left: 4px; }
+#client-suggestions .rule-list { margin-bottom: 4px; }
