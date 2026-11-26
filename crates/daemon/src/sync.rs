@@ -183,6 +183,12 @@ pub fn run(store: &Store, config: &Config) -> Result<Option<usize>, String> {
         "categories": if custom { json!(rules.rules()) } else { Value::Null },
     });
     call("PUT", &format!("{}/api/settings", account.server), token, &settings)?;
+    // Servers that show hours per client (zman Cloud) take the user's
+    // clients too; the plain sync server has no such route, so a failure
+    // here is not an error.
+    if !own.clients.is_empty() {
+        let _ = call("PUT", &format!("{}/api/clients", account.server), token, &json!({ "clients": own.clients }));
+    }
 
     let mut cursor_ms: i64 = store.meta_get(KEY_CURSOR_MS).map_err(text)?.and_then(|v| v.parse().ok()).unwrap_or(0);
     let mut cursor_id = store.meta_get(KEY_CURSOR_ID).map_err(text)?.unwrap_or_default();
