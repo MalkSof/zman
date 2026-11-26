@@ -12,12 +12,13 @@
   <header class="nav">
     <a class="brand" href="#top"><img src="{{root}}icon.png" alt="zman" width="28" height="28">zman</a>
     <nav>
+      <a href="#clients"><span lang="en">Clients</span><span lang="es">Clientes</span></a>
       <a href="#claude">Claude</a>
       <a href="#demo">Demo</a>
       <a href="#privacy"><span lang="en">Privacy</span><span lang="es">Privacidad</span></a>
       <a href="#faq">FAQ</a>
       <a href="{{blog}}">Blog</a>
-      <a href="#services"><span lang="en">Services</span><span lang="es">Servicios</span></a>
+      <a href="#pricing"><span lang="en">Pricing</span><span lang="es">Precios</span></a>
     </nav>
     <div class="nav-right">
       <span class="lang-toggle" id="lang-toggle"><a data-code="en" hreflang="en" href="{{en}}" title="English">EN</a><a data-code="es" hreflang="es" href="{{es}}" title="Español">ES</a></span>
@@ -28,24 +29,51 @@
   <main id="top">
     <section class="hero">
       <p class="eyebrow">
-        <span lang="en">Free automatic time tracker · open source · RescueTime alternative</span>
-        <span lang="es">Time tracker automático y gratis · open source · alternativa a RescueTime</span>
+        <span lang="en">For freelancers and small agencies · free and open source</span>
+        <span lang="es">Para freelancers y agencias chicas · gratis y open source</span>
       </p>
       <h1>
-        <span lang="en">Know where your time goes.<br><em>Then ask Claude about it.</em></span>
-        <span lang="es">Sabé a dónde se va tu tiempo.<br><em>Y preguntáselo a Claude.</em></span>
+        <span lang="en">Know what you earn per hour<br><em>with each client.</em></span>
+        <span lang="es">Sabé cuánto ganás por hora<br><em>con cada cliente.</em></span>
       </h1>
       <p class="lead">
-        <span lang="en">zman quietly records which apps and sites you use and for how long. No timers, no buttons. Your data stays on your computer, and your AI assistant can answer questions about it in plain language.</span>
-        <span lang="es">zman registra en silencio qué apps y sitios usás y por cuánto tiempo. Sin cronómetros ni botones. Tus datos quedan en tu computadora, y tu asistente de IA puede responder preguntas sobre ellos en lenguaje natural.</span>
+        <span lang="en">zman records what you work on, splits it by client and crosses it with what you get paid. No timers, no timesheets. And you can ask Claude where your week went.</span>
+        <span lang="es">zman registra solo en qué trabajás, lo separa por cliente y lo cruza con lo que cobrás. Sin cronómetros, sin cargar horas a mano. Y le podés preguntar a Claude en qué se te fue la semana.</span>
       </p>
       <div class="cta">
         <a class="btn" href="#download">
-          <span lang="en">Get zman</span><span lang="es">Conseguir zman</span>
+          <span lang="en">Download free</span><span lang="es">Descargar gratis</span>
         </a>
-        <a class="btn ghost" href="#demo">
-          <span lang="en">Try the live demo</span><span lang="es">Probar la demo en vivo</span>
+        <a class="btn ghost" href="#pricing">
+          <span lang="en">See plans</span><span lang="es">Ver planes</span>
         </a>
+      </div>
+    </section>
+
+    <section id="clients" class="clients">
+      <div class="clients-text">
+        <p class="eyebrow"><span lang="en">Hours per client</span><span lang="es">Horas por cliente</span></p>
+        <h2><span lang="en">Which client is worth your time?</span><span lang="es">¿Qué cliente te conviene de verdad?</span></h2>
+        <p class="section-lead">
+          <span lang="en">Tell zman who you work for, once. From then on it recognises each client by itself: the project folder in your editor or terminal, the client's website, or a word in the window title.</span>
+          <span lang="es">Decile a zman para quién trabajás, una sola vez. Desde ahí reconoce solo a cada cliente: la carpeta del proyecto en tu editor o tu terminal, el sitio del cliente, o una palabra en el título de la ventana.</span>
+        </p>
+        <ul class="ticks">
+          <li><span lang="en"><b>No timers.</b> Nothing to start, nothing to forget.</span><span lang="es"><b>Sin cronómetros.</b> Nada que prender, nada que olvidarse.</span></li>
+          <li><span lang="en"><b>Your real rate.</b> Add what each client paid, in pesos or dollars, and see what an hour of yours is really worth with each one.</span><span lang="es"><b>Tu tarifa real.</b> Cargá lo que te pagó cada cliente, en pesos o en dólares, y mirá cuánto vale de verdad tu hora con cada uno.</span></li>
+          <li><span lang="en"><b>Ask in plain language.</b> "How much did I earn per hour with Acme this month?"</span><span lang="es"><b>Preguntalo como lo dirías.</b> "¿Cuánto gané por hora con Acme este mes?"</span></li>
+        </ul>
+      </div>
+      <div class="clients-card" aria-hidden="true">
+        <h3><span lang="en">November · example</span><span lang="es">Noviembre · ejemplo</span></h3>
+        <table>
+          <tr><th><span lang="en">Client</span><span lang="es">Cliente</span></th><th><span lang="en">Hours</span><span lang="es">Horas</span></th><th><span lang="en">Paid</span><span lang="es">Cobrado</span></th><th><span lang="en">Per hour</span><span lang="es">Por hora</span></th></tr>
+          <tr><td>Acme</td><td>31h 00m</td><td>US$ 1.200</td><td class="up">US$ 39</td></tr>
+          <tr><td>Estudio Norte</td><td>9h 30m</td><td>$ 450.000</td><td class="up">$ 47.368</td></tr>
+          <tr><td>Café Rivera</td><td>22h 10m</td><td>$ 280.000</td><td class="down">$ 12.632</td></tr>
+          <tr class="rest"><td><span lang="en">No client</span><span lang="es">Sin cliente</span></td><td>14h 05m</td><td></td><td></td></tr>
+        </table>
+        <p><span lang="en">Café Rivera takes more than twice the hours of Estudio Norte and pays less. Time to raise that price.</span><span lang="es">Café Rivera te lleva más del doble de horas que Estudio Norte y paga menos. Hora de subirle el precio.</span></p>
       </div>
     </section>
 
@@ -165,24 +193,51 @@
       </ul>
     </section>
 
-    <section id="cloud" class="services">
-      <p class="eyebrow"><span lang="en">Coming next</span><span lang="es">Lo que viene</span></p>
-      <h2><span lang="en">zman, beyond one computer</span><span lang="es">zman, más allá de una computadora</span></h2>
+    <section id="pricing" class="services pricing">
+      <p class="eyebrow"><span lang="en">Plans</span><span lang="es">Planes</span></p>
+      <h2><span lang="en">Free on your computer. Paid when you want more.</span><span lang="es">Gratis en tu compu. Pago cuando querés más.</span></h2>
       <p class="section-lead">
-        <span lang="en">The app is free and stays free. We are building two paid services on top of it. Tell us which one you want and we will write to you when it opens.</span>
-        <span lang="es">La app es gratis y va a seguir siéndolo. Estamos construyendo dos servicios pagos arriba de ella. Decinos cuál te interesa y te escribimos cuando abra.</span>
+        <span lang="en">The app is free and open source, and it stays that way. zman Cloud adds the web, your phone and your team.</span>
+        <span lang="es">La app es gratis y open source, y va a seguir siéndolo. zman Cloud le suma la web, el celular y tu equipo.</span>
       </p>
-      <div class="grid two">
+      <div class="grid three plans">
         <article>
-          <p class="tag"><span lang="en">For you</span><span lang="es">Para vos</span></p>
-          <h3>zman Cloud</h3>
-          <p><span lang="en">All your computers and your phone in one place, and ChatGPT or Claude on the web connected in a minute. No server to install or maintain.</span><span lang="es">Todas tus computadoras y tu teléfono en un solo lugar, y ChatGPT o Claude en la web conectados en un minuto. Sin servidor que instalar ni mantener.</span></p>
-          <a class="btn ghost" href="{{waitlist_cloud}}"><span lang="en">Join the waitlist</span><span lang="es">Anotarme en la lista</span></a>
+          <p class="tag"><span lang="en">Free</span><span lang="es">Gratis</span></p>
+          <h3><span lang="en">The app</span><span lang="es">La app</span></h3>
+          <p class="price">$0 <small><span lang="en">forever</span><span lang="es">para siempre</span></small></p>
+          <ul>
+            <li><span lang="en">Automatic tracking of apps and sites</span><span lang="es">Registro automático de apps y sitios</span></li>
+            <li><span lang="en">Hours per client, payments and rate per hour</span><span lang="es">Horas por cliente, cobros y tarifa por hora</span></li>
+            <li><span lang="en">Ask Claude Desktop about your time</span><span lang="es">Preguntale a Claude Desktop por tu tiempo</span></li>
+            <li><span lang="en">Focus sessions and site blocking</span><span lang="es">Sesiones de foco y bloqueo de sitios</span></li>
+            <li><span lang="en">Your data stays on your computer</span><span lang="es">Tus datos quedan en tu computadora</span></li>
+          </ul>
+          <a class="btn" href="#download"><span lang="en">Download for Windows</span><span lang="es">Descargar para Windows</span></a>
+        </article>
+        <article class="featured">
+          <p class="tag">zman Cloud</p>
+          <h3>Freelancer</h3>
+          <p class="price">{{price}} <small><span lang="en">a month</span><span lang="es">por mes</span></small></p>
+          <ul>
+            <li><span lang="en">Everything in the free app</span><span lang="es">Todo lo de la app gratis</span></li>
+            <li><span lang="en">Your panel on the web and on your phone</span><span lang="es">Tu panel en la web y en el celular</span></li>
+            <li><span lang="en">All your computers in one place</span><span lang="es">Todas tus computadoras en un solo lugar</span></li>
+            <li><span lang="en">ChatGPT and Claude on the web, connected</span><span lang="es">ChatGPT y Claude en la web, conectados</span></li>
+            <li><span lang="en">Coming soon: your ARCA invoice from your hours</span><span lang="es">Muy pronto: tu factura de ARCA desde las horas</span></li>
+          </ul>
+          <a class="btn" href="{{cloud_link}}">{{cloud_label}}</a>
+          <p class="small-note">{{cloud_note}}</p>
         </article>
         <article>
-          <p class="tag"><span lang="en">For teams and families</span><span lang="es">Para equipos y familias</span></p>
-          <h3><span lang="en">zman for teams</span><span lang="es">zman para equipos</span></h3>
-          <p><span lang="en">One panel for several people: time per project, focus time, and limits and blocked sites that cannot be switched off from the computer itself.</span><span lang="es">Un panel para varias personas: tiempo por proyecto, tiempo de foco, y límites y sitios bloqueados que no se pueden apagar desde la propia computadora.</span></p>
+          <p class="tag"><span lang="en">Coming soon</span><span lang="es">Próximamente</span></p>
+          <h3><span lang="en">Team</span><span lang="es">Equipo</span></h3>
+          <p class="price"><small><span lang="en">per person</span><span lang="es">por persona</span></small></p>
+          <ul>
+            <li><span lang="en">Invite your collaborators</span><span lang="es">Invitá a tus colaboradores</span></li>
+            <li><span lang="en">Hours per client for the whole team</span><span lang="es">Horas por cliente de todo el equipo</span></li>
+            <li><span lang="en">Real margin per client: what they pay minus what the team costs</span><span lang="es">Margen real por cliente: lo que paga menos lo que cuesta el equipo</span></li>
+            <li><span lang="en">Only totals are shared, never window titles</span><span lang="es">Se comparten solo totales, nunca títulos de ventanas</span></li>
+          </ul>
           <a class="btn ghost" href="{{waitlist_teams}}"><span lang="en">Join the waitlist</span><span lang="es">Anotarme en la lista</span></a>
         </article>
       </div>
@@ -238,7 +293,7 @@
   </main>
 
   <footer>
-    <span>zman · <span lang="en">free and open source time tracker</span><span lang="es">time tracker gratis y open source</span> · MIT</span>
+    <span>zman · <span lang="en">hours per client for freelancers, free and open source</span><span lang="es">horas por cliente para freelancers, gratis y open source</span> · MIT</span>
     <a href="https://github.com/MalkSof/zman">github.com/MalkSof/zman</a>
   </footer>
 

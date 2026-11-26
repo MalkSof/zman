@@ -12,10 +12,10 @@ BG, INK, MUTED, ACCENT = "#14161c", "#f0efec", "#a3a29b", "#3987e5"
 COLORS = ["#3987e5", "#d95926", "#199e70", "#c98500", "#e66767"]
 
 TEXT = {
-    "en": (["Know where your", "time goes."], "Then ask Claude about it.",
-           "Free · open source · your data stays on your computer"),
-    "es": (["Sabé a dónde se", "va tu tiempo."], "Y preguntáselo a Claude.",
-           "Gratis · open source · tus datos quedan en tu computadora"),
+    "en": (["Know what you", "earn per hour."], "With each client.",
+           "Free · open source · made for freelancers"),
+    "es": (["Sabé cuánto", "ganás por hora."], "Con cada cliente.",
+           "Gratis · open source · hecho para freelancers"),
 }
 # Hours of a made-up day: (development, work, communication, browsing, fun) in minutes.
 DAY = [(30, 0, 0, 0, 0), (34, 4, 3, 8, 0), (44, 9, 0, 0, 0), (35, 14, 0, 0, 0), (2, 0, 0, 0, 0),

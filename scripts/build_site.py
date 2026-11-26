@@ -25,7 +25,18 @@ URL = "https://malksof.github.io/zman/"
 if os.path.exists(os.path.join(SRC, "CNAME")):
     URL = "https://%s/" % io.open(os.path.join(SRC, "CNAME"), encoding="utf-8").read().strip()
 REPO = "https://github.com/MalkSof/zman"
-VERSION = "0.2.0"
+VERSION = "0.3.0"
+# zman Cloud. While CLOUD_URL is empty the plan's button leads to the waitlist;
+# put the address of the hosted service here once it is open.
+CLOUD_URL = ""
+PRICE_ARS = "9.900"
+TRIAL_DAYS = 15
+CLOUD = {
+    "en": {"price": "ARS " + PRICE_ARS.replace(".", ","), "open": "Try it %d days free" % TRIAL_DAYS, "open_note": "No card needed. Cancel any time.",
+           "closed": "Tell me when it opens", "closed_note": "Opening soon. %d days free when it does." % TRIAL_DAYS},
+    "es": {"price": "$" + PRICE_ARS, "open": "Probar %d días gratis" % TRIAL_DAYS, "open_note": "Sin tarjeta. Cancelás cuando quieras.",
+           "closed": "Avisame cuando abra", "closed_note": "Abre muy pronto, con %d días gratis." % TRIAL_DAYS},
+}
 # Where "Join the waitlist" leads. Put the address of a form here (one that
 # collects an email) to replace the default, which opens a GitHub issue.
 WAITLIST = {
@@ -37,16 +48,20 @@ PAGES = {
     "en": {
         "path": "",
         "locale": "en_US",
-        "title": "zman · Free automatic time tracker, a RescueTime alternative",
-        "description": "Free, open source automatic time tracker for Windows. See where your time goes, "
-                       "block distracting sites and ask Claude or ChatGPT about your day. Your data stays on your computer.",
-        "card_title": "Know where your time goes. Then ask Claude about it.",
+        "title": "zman · Hours per client and your real hourly rate, for freelancers",
+        "description": "Free automatic time tracker for freelancers. zman splits your hours by client without timers, "
+                       "crosses them with what you get paid and shows your real rate per hour. Open source, for Windows.",
+        "card_title": "Know what you earn per hour with each client.",
         "faq_title": "Questions people ask",
         "posts_title": "From the blog",
         "posts_more": "All articles",
         "faq": [
             ("Is zman free?",
-             "Yes. zman is free and open source under the MIT license. There is no account, no trial and no paid plan: you download it and it works."),
+             "The app is free and open source under the MIT license, with no account needed: you download it and it works, including hours per client and your rate per hour. zman Cloud is an optional paid service that adds a web panel, your phone and several computers."),
+            ("How does it know which client I am working for?",
+             "You add each client once, with a word that shows up in the window title (usually the project folder your editor or terminal displays), the client's website or an app. From then on zman assigns the time by itself, and it suggests the project folders it saw that have no client yet. You can change the rules at any time."),
+            ("How does it compute my rate per hour?",
+             "You enter what each client paid, in pesos, dollars or euros, or you tell your AI assistant and it saves it. zman divides what was paid in the month by the hours it tracked for that client. Your own projects count hours but have no rate."),
             ("Is it an alternative to RescueTime?",
              "Yes. Like RescueTime, zman tracks the apps and websites you use automatically and gives you a productivity score, categories and focus time. The difference is that zman is open source and keeps your data in a file on your own computer instead of in someone else's cloud."),
             ("How does it work with Claude and ChatGPT?",
@@ -62,16 +77,22 @@ PAGES = {
     "es": {
         "path": "es/",
         "locale": "es_AR",
-        "title": "zman · Time tracker automático y gratis, alternativa a RescueTime",
-        "description": "Time tracker automático, gratis y open source para Windows. Mirá en qué se te va el tiempo, "
-                       "bloqueá los sitios que distraen y preguntale a Claude o ChatGPT por tu día. Tus datos quedan en tu computadora.",
-        "card_title": "Sabé a dónde se va tu tiempo. Y preguntáselo a Claude.",
+        "title": "zman · Horas por cliente y tu tarifa real por hora, para freelancers",
+        "description": "Time tracker automático y gratis para freelancers. zman separa tus horas por cliente sin cronómetros, "
+                       "las cruza con lo que cobrás y te muestra tu tarifa real por hora. Open source, para Windows.",
+        "card_title": "Sabé cuánto ganás por hora con cada cliente.",
         "faq_title": "Preguntas frecuentes",
         "posts_title": "Del blog",
         "posts_more": "Todos los artículos",
         "faq": [
             ("¿zman es gratis?",
-             "Sí. zman es gratis y open source, con licencia MIT. No hay cuenta, ni prueba, ni plan pago: lo descargás y funciona."),
+             "La app es gratis y open source, con licencia MIT, y no pide cuenta: la descargás y funciona, con las horas por cliente y tu tarifa por hora incluidas. zman Cloud es un servicio pago opcional que suma el panel web, el celular y varias computadoras."),
+            ("¿Cómo sabe para qué cliente estoy trabajando?",
+             "Cargás cada cliente una sola vez, con una palabra que aparece en el título de la ventana (casi siempre la carpeta del proyecto que muestran tu editor o tu terminal), el sitio del cliente o una app. Desde ahí zman asigna el tiempo solo, y te sugiere las carpetas de proyecto que vio y todavía no tienen cliente. Las reglas se pueden cambiar cuando quieras."),
+            ("¿Cómo calcula mi tarifa por hora?",
+             "Cargás lo que te pagó cada cliente, en pesos, dólares o euros, o se lo decís a tu asistente de IA y lo anota. zman divide lo cobrado en el mes por las horas que registró para ese cliente. Tus proyectos propios cuentan horas pero no tienen tarifa."),
+            ("¿Puedo facturar en ARCA desde zman?",
+             "Todavía no. Estamos trabajando para que zman Cloud arme la factura de ARCA a partir de las horas del mes. Hoy zman mide las horas y calcula tu tarifa; la factura la seguís haciendo donde la hacés siempre."),
             ("¿Es una alternativa a RescueTime?",
              "Sí. Igual que RescueTime, zman registra solo las apps y los sitios que usás y te da un puntaje de productividad, categorías y tiempo de foco. La diferencia es que zman es open source y guarda tus datos en un archivo en tu propia computadora, no en la nube de otro."),
             ("¿Cómo funciona con Claude y ChatGPT?",
@@ -190,7 +211,10 @@ for lang, page in PAGES.items():
         "head": head(lang),
         "faq": faq(lang),
         "posts": latest(lang, root),
-        "waitlist_cloud": html.escape(WAITLIST["cloud"], quote=True),
+        "price": CLOUD[lang]["price"],
+        "cloud_link": html.escape(CLOUD_URL.rstrip("/") + "/signup" if CLOUD_URL else WAITLIST["cloud"], quote=True),
+        "cloud_label": CLOUD[lang]["open" if CLOUD_URL else "closed"],
+        "cloud_note": CLOUD[lang]["open_note" if CLOUD_URL else "closed_note"],
         "waitlist_teams": html.escape(WAITLIST["teams"], quote=True),
         "blog": root + page["path"] + "blog/",
         "en": root or "./",

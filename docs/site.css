@@ -202,3 +202,35 @@ footer { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 12
   .grid, .grid.two, .post-list.three { grid-template-columns: minmax(0, 1fr); }
   .window iframe { height: 1180px; }
 }
+
+/* Hours per client */
+main > .clients { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 48px; align-items: center; }
+.ticks { list-style: none; padding: 0; margin-top: 24px; display: grid; gap: 14px; color: var(--ink-2); }
+.ticks li { padding-left: 30px; position: relative; }
+.ticks li::before { content: ""; position: absolute; left: 0; top: 5px; width: 18px; height: 18px; border-radius: 50%; background: var(--accent) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='m4.5 8.3 2.3 2.3 4.7-5' fill='none' stroke='%23fff' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center/14px no-repeat; }
+.ticks b { color: var(--ink); }
+.clients-card { background: #14161c; color: #f0efec; border-radius: 20px; padding: 26px 28px; box-shadow: 0 24px 60px rgba(0, 0, 0, 0.18); }
+.clients-card h3 { font-size: 12.5px; font-weight: 500; letter-spacing: 0.06em; text-transform: uppercase; color: #a9a8a1; margin-bottom: 10px; }
+.clients-card table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; font-size: 16px; }
+.clients-card th { font-size: 12.5px; font-weight: 500; color: #a9a8a1; text-align: right; padding-bottom: 8px; }
+.clients-card td { text-align: right; padding: 11px 0; border-top: 1px solid rgba(255, 255, 255, 0.09); white-space: nowrap; }
+.clients-card th:first-child, .clients-card td:first-child { text-align: left; }
+.clients-card .up { color: #6fd08c; font-weight: 650; }
+.clients-card .down { color: #f0a35e; font-weight: 650; }
+.clients-card .rest td { color: #a9a8a1; }
+.clients-card p { margin-top: 16px; padding-top: 14px; border-top: 1px solid rgba(255, 255, 255, 0.09); color: #c9c8c1; font-size: 15px; }
+
+/* Plans */
+.plans article { display: flex; flex-direction: column; }
+.plans .price { font-size: 34px !important; font-weight: 700; letter-spacing: -0.02em; color: var(--ink) !important; margin-top: 6px !important; min-height: 51px; }
+.plans .price small { font-size: 15px; font-weight: 500; color: var(--muted); letter-spacing: 0; }
+.plans ul { list-style: none; padding: 0; margin: 16px 0 22px; display: grid; gap: 9px; color: var(--ink-2); font-size: 15.5px; }
+.plans li { padding-left: 24px; position: relative; }
+.plans li::before { content: "✓"; position: absolute; left: 0; color: var(--accent); font-weight: 700; }
+.plans .btn { margin-top: auto; text-align: center; }
+.plans .featured { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent), 0 18px 44px rgba(42, 120, 214, 0.14); }
+.plans .small-note { margin-top: 10px; font-size: 13.5px !important; text-align: center; }
+@media (max-width: 860px) { main > .clients { grid-template-columns: 1fr; gap: 28px; } .clients-card { padding: 20px; } .clients-card table { font-size: 14.5px; } }
+
+.post .formula { padding: 14px 18px; border-radius: 12px; background: var(--surface); border: 1px solid var(--border); font-weight: 600; text-align: center; }
+.plans .tag { align-self: flex-start; }

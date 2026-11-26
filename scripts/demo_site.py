@@ -57,10 +57,37 @@ MOCK = """// Demo data, used when the dashboard runs in a browser instead of ins
     const score = (name) => (view.categories.find((c) => c.name === name) || { score: 0 }).score;
     return { settings, categories: view.category_order.map((name) => ({ name, score: score(name) })), now_ms: Date.now() };
   };
+  const clients = [
+    { name: "Acme", own: false, keywords: ["acme"], domains: ["acme.com"], apps: [], payments: [{ date: "2026-11-05", amount: 1200, currency: "USD", note: "" }] },
+    { name: "Studio Norte", own: false, keywords: ["norte"], domains: [], apps: ["figma.exe"], payments: [{ date: "2026-11-10", amount: 450000, currency: "ARS", note: "" }] },
+    { name: "Side project", own: true, keywords: ["zman"], domains: ["github.com"], apps: [], payments: [] },
+  ];
+  const H = 3600000;
+  const clientsReply = () => {
+    const month = { Acme: 31 * H, "Studio Norte": 9.5 * H, "Side project": 6 * H };
+    const usage = (ms, c) => {
+      const paid = {};
+      for (const p of c.payments) paid[p.currency] = (paid[p.currency] || 0) + p.amount;
+      const list = Object.entries(paid).map(([currency, amount]) => ({ currency, amount }));
+      return { name: c.name, own: c.own, ms, paid: list, per_hour: c.own ? [] : list.map((m) => ({ currency: m.currency, amount: Math.round(m.amount / (ms / H)) })) };
+    };
+    const known = clients.filter((c) => month[c.name]);
+    return {
+      clients,
+      period: { total_ms: 0, unassigned_ms: 1.2 * H, clients: known.map((c) => ({ ...usage(month[c.name] / 9, c), paid: [], per_hour: [] })) },
+      month: { total_ms: 0, unassigned_ms: 14 * H, clients: known.map((c) => usage(month[c.name], c)).sort((a, b) => b.ms - a.ms) },
+      month_start: "2026-11-01",
+      suggestions: [{ name: "landing-cafe", ms: 2.5 * H }],
+    };
+  };
   window.zmanMock = async (command, args) => {
     if (command === "get_dashboard") {
       const view = all[lang][args.period] || all[lang].day;
       return { ...view, status, goal_minutes: settings.goal_minutes, focus_until_ms: settings.block.focus_until_ms };
+    }
+    if (command === "get_clients" || command === "save_clients") {
+      if (args.clients) clients.splice(0, clients.length, ...args.clients);
+      return clientsReply();
     }
     if (command === "get_settings") return settingsReply();
     if (command === "save_settings") {
@@ -102,9 +129,7 @@ for name in ("style.css", "app.js"):
     shutil.copyfile(os.path.join(UI, name), os.path.join(OUT, name))
 # The demo is part of the home page; search engines should not list it alone.
 page = io.open(os.path.join(UI, "index.html"), encoding="utf-8").read()
-page = page.replace("<title>", '<meta name="robots" content="noindex">
-  <title>', 1)
-with io.open(os.path.join(OUT, "index.html"), "w", encoding="utf-8", newline="
-") as f:
+page = page.replace("<title>", '<meta name="robots" content="noindex">\n  <title>', 1)
+with io.open(os.path.join(OUT, "index.html"), "w", encoding="utf-8", newline="\n") as f:
     f.write(page)
 print("demo data rebuilt for", day)

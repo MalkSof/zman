@@ -72,6 +72,21 @@ const TEXT = {
     productiveToday: "of productive time",
     moveTo: (name) => `${name} goes to`, automatic: "Automatic",
     exportCsv: "Export this view as CSV", exported: (path) => `Saved to ${path}`,
+    clientsTitle: "Clients", clientsEdit: "Edit clients",
+    clientsEmpty: "Tell zman who you work for and it will show how many hours each client takes and what you really earn per hour. No timers: it recognises the project folder, the client's site or a word in the window title.",
+    clientsStart: "Add my clients",
+    clientCol: "Client", periodDay: "Today", periodWeek: "This week", monthCol: (m) => m,
+    hoursCol: "Hours", paidCol: "Paid", perHourCol: "Per hour",
+    ownTag: "own", unassigned: "No client",
+    clientsDialogTitle: "Your clients",
+    clientsDialogLead: "zman adds up the time of each client by itself. Add what they paid and it tells you your real rate per hour.",
+    clientAdd: "Add a client", clientName: "Name", clientOwn: "My own project (counts hours, no rate)",
+    clientKeywords: "Words in the window title", clientKeywordsHint: "project folder, company name… separated by commas",
+    clientDomains: "Websites", clientApps: "Apps", clientDelete: "Delete client",
+    paymentsTitle: "Payments", paymentAdd: "Add payment", paymentNote: "Note (invoice number…)",
+    suggestionsTitle: "Projects zman saw this month with no client — click to add",
+    clientsPrivacy: "Clients and payments stay on this computer. Your AI assistant can read them through zman (\"how much did I earn per hour with X?\") and save payments you tell it about.",
+    newClient: "New client",
   },
   es: {
     day: "Día", week: "Semana", today: "Hoy", thisWeek: "Esta semana",
@@ -139,6 +154,21 @@ const TEXT = {
     productiveToday: "de tiempo productivo",
     moveTo: (name) => `${name} va a`, automatic: "Automática",
     exportCsv: "Exportar esta vista a CSV", exported: (path) => `Guardado en ${path}`,
+    clientsTitle: "Clientes", clientsEdit: "Editar clientes",
+    clientsEmpty: "Decile a zman para quién trabajás y te muestra cuántas horas te lleva cada cliente y cuánto ganás de verdad por hora. Sin cronómetros: reconoce la carpeta del proyecto, el sitio del cliente o una palabra en el título de la ventana.",
+    clientsStart: "Agregar mis clientes",
+    clientCol: "Cliente", periodDay: "Hoy", periodWeek: "Esta semana", monthCol: (m) => m,
+    hoursCol: "Horas", paidCol: "Cobrado", perHourCol: "Por hora",
+    ownTag: "propio", unassigned: "Sin cliente",
+    clientsDialogTitle: "Tus clientes",
+    clientsDialogLead: "zman suma solo el tiempo de cada cliente. Cargá lo que te pagaron y te dice cuánto ganás de verdad por hora.",
+    clientAdd: "Agregar cliente", clientName: "Nombre", clientOwn: "Proyecto propio (cuenta horas, sin tarifa)",
+    clientKeywords: "Palabras en el título de la ventana", clientKeywordsHint: "carpeta del proyecto, nombre de la empresa… separadas por comas",
+    clientDomains: "Sitios web", clientApps: "Apps", clientDelete: "Borrar cliente",
+    paymentsTitle: "Cobros", paymentAdd: "Agregar cobro", paymentNote: "Nota (número de factura…)",
+    suggestionsTitle: "Proyectos que zman vio este mes sin cliente — tocá para agregar",
+    clientsPrivacy: "Los clientes y los cobros quedan en esta computadora. Tu asistente de IA los puede leer a través de zman (\"¿cuánto gané por hora con X?\") y anotar los cobros que le cuentes.",
+    newClient: "Cliente nuevo",
   },
 };
 
@@ -198,6 +228,7 @@ function render(data) {
   }
   renderTiles(data);
   renderChart(data);
+  loadClients();
   renderList("categories", data.categories.map((c) => ({ name: c.name, ms: c.ms, color: colorOf(c.name) })), data.total_ms);
   renderList("apps", data.apps.map((a) => ({ kind: "app", id: a.id, name: a.name, note: a.category, ms: a.ms, color: colorOf(a.category) })), data.total_ms);
   renderList("sites", data.sites.map((s) => ({ kind: "site", id: s.id, name: s.name, note: s.category, ms: s.ms, color: colorOf(s.category) })), data.total_ms, t.sitesHint);
@@ -696,6 +727,165 @@ document.addEventListener("click", async (event) => {
   if (row) openCategoryMenu(row, event);
 });
 document.addEventListener("keydown", (event) => { if (event.key === "Escape") catMenu.hidden = true; });
+
+// ---------- Clients ----------
+
+const clientsDialog = $("clients-dialog");
+const money = (list) =>
+  list.map((m) => new Intl.NumberFormat(state.data.lang, { style: "currency", currency: m.currency, maximumFractionDigits: 0 }).format(m.amount)).join(" + ");
+const rangeArgs = () => ({ startMs: state.data.range_start_ms, endMs: state.data.range_end_ms });
+
+async function loadClients() {
+  try {
+    renderClients(await invoke("get_clients", rangeArgs()));
+  } catch (problem) {
+    $("clients-body").innerHTML = `<p class="hint">${esc(String(problem))}</p>`;
+  }
+}
+
+function renderClients(reply) {
+  state.clients = reply;
+  const body = $("clients-body");
+  $("clients-edit").hidden = !reply.clients.length;
+  if (!reply.clients.length) {
+    body.innerHTML = `<div class="clients-empty"><p class="hint">${esc(t.clientsEmpty)}</p>
+      <button class="primary-btn" id="clients-start">${esc(t.clientsStart)}</button></div>`;
+  } else {
+    const month = new Date(`${reply.month_start}T12:00:00`).toLocaleDateString(state.data.lang, { month: "long" });
+    const byName = Object.fromEntries(reply.period.clients.map((c) => [c.name, c]));
+    const names = [...new Set([...reply.month.clients.map((c) => c.name), ...reply.period.clients.map((c) => c.name)])];
+    const longest = Math.max(1, ...reply.month.clients.map((c) => c.ms));
+    const rows = names.map((name) => {
+      const m = reply.month.clients.find((c) => c.name === name) || { ms: 0, paid: [], per_hour: [], own: (byName[name] || {}).own };
+      const p = byName[name] || { ms: 0 };
+      return `<tr>
+        <td><b>${esc(name)}</b>${m.own ? ` <em class="tag">${esc(t.ownTag)}</em>` : ""}
+          <div class="row-bar"><div style="width:${((m.ms / longest) * 100).toFixed(1)}%;background:${m.own ? "var(--s-none)" : "var(--accent)"}"></div></div></td>
+        <td>${p.ms ? esc(duration(p.ms)) : "—"}</td>
+        <td>${m.ms ? esc(duration(m.ms)) : "—"}</td>
+        <td>${m.paid.length ? esc(money(m.paid)) : "—"}</td>
+        <td class="rate">${m.per_hour.length ? esc(money(m.per_hour)) : "—"}</td>
+      </tr>`;
+    });
+    rows.push(`<tr class="muted"><td>${esc(t.unassigned)}</td><td>${esc(duration(reply.period.unassigned_ms))}</td><td>${esc(duration(reply.month.unassigned_ms))}</td><td></td><td></td></tr>`);
+    body.innerHTML = `<table class="ctable"><thead><tr>
+      <th>${esc(t.clientCol)}</th><th>${esc(state.data.period === "day" ? t.periodDay : t.periodWeek)}</th>
+      <th>${esc(month)} · ${esc(t.hoursCol)}</th><th>${esc(t.paidCol)}</th><th>${esc(t.perHourCol)}</th>
+    </tr></thead><tbody>${rows.join("")}</tbody></table>`;
+  }
+  if (clientsDialog.open) renderClientEditors();
+}
+
+const list = (text) => text.split(",").map((s) => s.trim()).filter(Boolean);
+const today = () => new Date().toISOString().slice(0, 10);
+
+function renderClientEditors() {
+  const reply = state.clients;
+  $("client-suggestions").innerHTML = reply.suggestions.length
+    ? `<p class="hint">${esc(t.suggestionsTitle)}</p><div class="rule-list chips">${reply.suggestions
+        .map((s) => `<button class="chip-btn" data-suggest="${esc(s.name)}">+ ${esc(s.name)} <small>${esc(duration(s.ms))}</small></button>`)
+        .join("")}</div>`
+    : "";
+  $("client-editors").innerHTML = reply.clients
+    .map(
+      (c, i) => `<section class="conn client-edit" data-client="${i}">
+      <div class="add-row">
+        <input class="grow name" data-f="name" value="${esc(c.name)}" placeholder="${esc(t.clientName)}">
+        <button class="icon-btn" data-del-client="${i}" title="${esc(t.clientDelete)}">${removeIcon}</button>
+      </div>
+      <label class="switch-row flush"><span>${esc(t.clientOwn)}</span><input type="checkbox" data-f="own" ${c.own ? "checked" : ""}><span class="switch"></span></label>
+      <label class="field"><span>${esc(t.clientKeywords)}</span><input data-f="keywords" value="${esc(c.keywords.join(", "))}" placeholder="${esc(t.clientKeywordsHint)}"></label>
+      <div class="field-pair">
+        <label class="field"><span>${esc(t.clientDomains)}</span><input data-f="domains" value="${esc(c.domains.join(", "))}" placeholder="cliente.com"></label>
+        <label class="field"><span>${esc(t.clientApps)}</span><input data-f="apps" value="${esc(c.apps.join(", "))}" placeholder="app.exe"></label>
+      </div>
+      ${c.own ? "" : `<h3 class="sub">${esc(t.paymentsTitle)}</h3>
+      <div class="rule-list">${c.payments
+        .map((p, j) => `<div class="rule"><b>${esc(money([p]))}</b><span>${esc(p.date)}${p.note ? ` · ${esc(p.note)}` : ""}</span>
+          <button class="icon-btn" data-del-payment="${i}:${j}" title="${esc(t.remove)}">${removeIcon}</button></div>`)
+        .join("")}</div>
+      <form class="add-row payment-form" data-pay="${i}">
+        <input type="date" name="date" value="${today()}" required>
+        <input type="number" name="amount" class="narrow wide" min="0" step="any" placeholder="0" required>
+        <select name="currency"><option>ARS</option><option>USD</option><option>EUR</option></select>
+        <input name="note" class="grow" placeholder="${esc(t.paymentNote)}">
+        <button class="ghost-btn">${esc(t.paymentAdd)}</button>
+      </form>`}
+    </section>`,
+    )
+    .join("");
+}
+
+async function saveClients() {
+  const error = $("clients-error");
+  error.hidden = true;
+  try {
+    renderClients(await invoke("save_clients", { clients: state.clients.clients, ...rangeArgs() }));
+  } catch (problem) {
+    error.textContent = String(problem);
+    error.hidden = false;
+  }
+}
+
+function openClients(addNew) {
+  clientsDialog.showModal();
+  if (addNew && !state.clients.clients.length) {
+    renderClientEditors();
+    return;
+  }
+  renderClientEditors();
+}
+
+const blankClient = (name) => ({ name, own: false, keywords: name ? [name] : [], domains: [], apps: [], payments: [] });
+
+$("clients-edit").addEventListener("click", () => openClients(false));
+$("clients-body").addEventListener("click", (event) => { if (event.target.id === "clients-start") openClients(true); });
+$("clients-close").addEventListener("click", () => clientsDialog.close());
+$("client-add").addEventListener("click", () => {
+  state.clients.clients.push(blankClient(""));
+  renderClientEditors();
+  const inputs = $("client-editors").querySelectorAll("input.name");
+  inputs[inputs.length - 1].focus();
+});
+clientsDialog.addEventListener("click", (event) => {
+  if (event.target === clientsDialog) return clientsDialog.close();
+  const suggest = event.target.closest("[data-suggest]");
+  if (suggest) {
+    state.clients.clients.push(blankClient(suggest.dataset.suggest));
+    return saveClients();
+  }
+  const delClient = event.target.closest("[data-del-client]");
+  if (delClient) {
+    state.clients.clients.splice(Number(delClient.dataset.delClient), 1);
+    return saveClients();
+  }
+  const delPayment = event.target.closest("[data-del-payment]");
+  if (delPayment) {
+    const [i, j] = delPayment.dataset.delPayment.split(":").map(Number);
+    state.clients.clients[i].payments.splice(j, 1);
+    return saveClients();
+  }
+});
+clientsDialog.addEventListener("change", (event) => {
+  const field = event.target.dataset.f;
+  const box = event.target.closest("[data-client]");
+  if (!field || !box) return;
+  const client = state.clients.clients[Number(box.dataset.client)];
+  if (field === "own") client.own = event.target.checked;
+  else if (field === "name") client.name = event.target.value.trim();
+  else client[field] = list(event.target.value);
+  if (client.name) saveClients();
+});
+clientsDialog.addEventListener("submit", (event) => {
+  const form = event.target.closest("[data-pay]");
+  if (!form) return;
+  event.preventDefault();
+  const data = new FormData(form);
+  state.clients.clients[Number(form.dataset.pay)].payments.push({
+    date: data.get("date"), amount: Number(data.get("amount")), currency: data.get("currency"), note: String(data.get("note") || "").trim(),
+  });
+  saveClients();
+});
 
 // ---------- Export ----------
 

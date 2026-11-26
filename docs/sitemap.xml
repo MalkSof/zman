@@ -31,6 +31,16 @@
     <xhtml:link rel="alternate" hreflang="es" href="https://zman.malkadigital.com/es/blog/cuanto-cuesta-una-interrupcion/"/>
   </url>
   <url>
+    <loc>https://zman.malkadigital.com/blog/hours-per-client-without-a-timer/</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://zman.malkadigital.com/blog/hours-per-client-without-a-timer/"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://zman.malkadigital.com/es/blog/horas-por-cliente-sin-cronometro/"/>
+  </url>
+  <url>
+    <loc>https://zman.malkadigital.com/blog/real-hourly-rate-freelancer/</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://zman.malkadigital.com/blog/real-hourly-rate-freelancer/"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://zman.malkadigital.com/es/blog/cuanto-ganas-por-hora-como-freelancer/"/>
+  </url>
+  <url>
     <loc>https://zman.malkadigital.com/blog/rescuetime-alternatives/</loc>
     <xhtml:link rel="alternate" hreflang="en" href="https://zman.malkadigital.com/blog/rescuetime-alternatives/"/>
     <xhtml:link rel="alternate" hreflang="es" href="https://zman.malkadigital.com/es/blog/alternativas-a-rescuetime/"/>
@@ -54,6 +64,16 @@
     <loc>https://zman.malkadigital.com/es/blog/cuanto-cuesta-una-interrupcion/</loc>
     <xhtml:link rel="alternate" hreflang="en" href="https://zman.malkadigital.com/blog/cost-of-interruptions/"/>
     <xhtml:link rel="alternate" hreflang="es" href="https://zman.malkadigital.com/es/blog/cuanto-cuesta-una-interrupcion/"/>
+  </url>
+  <url>
+    <loc>https://zman.malkadigital.com/es/blog/horas-por-cliente-sin-cronometro/</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://zman.malkadigital.com/blog/hours-per-client-without-a-timer/"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://zman.malkadigital.com/es/blog/horas-por-cliente-sin-cronometro/"/>
+  </url>
+  <url>
+    <loc>https://zman.malkadigital.com/es/blog/cuanto-ganas-por-hora-como-freelancer/</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://zman.malkadigital.com/blog/real-hourly-rate-freelancer/"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://zman.malkadigital.com/es/blog/cuanto-ganas-por-hora-como-freelancer/"/>
   </url>
   <url>
     <loc>https://zman.malkadigital.com/es/blog/alternativas-a-rescuetime/</loc>
