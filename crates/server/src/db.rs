@@ -287,6 +287,27 @@ impl Db {
         Ok(())
     }
 
+    /// Replaces a user's password hash. A text that is not a hash leaves the
+    /// account without a password: nothing verifies against it.
+    pub async fn set_password_hash(&self, user_id: &str, password_hash: &str) -> DbResult<()> {
+        match self {
+            Db::Postgres(pool) => {
+                sqlx::query("UPDATE users SET password_hash = $2 WHERE id = $1")
+                    .bind(user_id)
+                    .bind(password_hash)
+                    .execute(pool)
+                    .await
+                    .map_err(db_err)?;
+            }
+            Db::Memory(memory) => {
+                if let Some(user) = memory.lock().unwrap().users.iter_mut().find(|u| u.id == user_id) {
+                    user.password_hash = password_hash.to_string();
+                }
+            }
+        }
+        Ok(())
+    }
+
     // ---------- Devices ----------
 
     /// Registers a device or refreshes its name and last-seen time.

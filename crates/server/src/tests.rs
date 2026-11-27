@@ -143,6 +143,19 @@ async fn users_are_listed_newest_first() {
 }
 
 #[tokio::test]
+async fn an_account_without_a_password_gets_one_later() {
+    let db = Db::memory();
+    let app = app(AppState { db: db.clone(), public_url: BASE.into(), allow_registration: true });
+    // Created by a server that signs people in some other way: no password yet.
+    let id = db.create_user("ana@example.com", "!", 1).await.unwrap().unwrap();
+    let login = json!({ "email": "ana@example.com", "password": "correct horse", "device_id": "DEV1" });
+    assert_eq!(json_request(&app, "POST", "/api/login", None, login.clone()).await.status, StatusCode::UNAUTHORIZED);
+
+    db.set_password_hash(&id, &auth::hash_password("correct horse").unwrap()).await.unwrap();
+    assert_eq!(json_request(&app, "POST", "/api/login", None, login).await.status, StatusCode::OK);
+}
+
+#[tokio::test]
 async fn accounts_and_login() {
     let app = server(true);
     let credentials = json!({ "email": " Ana@Example.com ", "password": "correct horse" });
