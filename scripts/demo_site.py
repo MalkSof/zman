@@ -80,6 +80,7 @@ MOCK = """// Demo data, used when the dashboard runs in a browser instead of ins
       suggestions: [{ name: "landing-cafe", ms: 2.5 * H }],
     };
   };
+  let pairing = null;
   window.zmanMock = async (command, args) => {
     if (command === "get_dashboard") {
       const view = all[lang][args.period] || all[lang].day;
@@ -113,6 +114,18 @@ MOCK = """// Demo data, used when the dashboard runs in a browser instead of ins
     if (command === "set_paused") status.tracking = args.paused ? "paused" : "running";
     if (command === "sync_login") connections.sync = { server: args.server, email: args.email, mcp_url: args.server + "/mcp", last_sync_ms: Date.now() };
     if (command === "sync_logout") connections.sync = null;
+    // Connecting through the browser: the demo approves itself on the second check.
+    if (command === "pair_start") {
+      pairing = { server: args.server, checks: 0 };
+      return { user_code: "K7QM-2XPA", url: args.server + "/pair?code=K7QM-2XPA", opened: false };
+    }
+    if (command === "pair_cancel") { pairing = null; return null; }
+    if (command === "pair_check") {
+      if (!pairing || ++pairing.checks < 2) return null;
+      connections.sync = { server: pairing.server, email: "vos@example.com", mcp_url: pairing.server + "/mcp", last_sync_ms: Date.now() };
+      pairing = null;
+      return connections;
+    }
     if (command === "set_claude_desktop") connections.claude_desktop.connected = args.connected;
     if (command.startsWith("sync_") || command.endsWith("connections") || command === "set_claude_desktop") return connections;
     return status;

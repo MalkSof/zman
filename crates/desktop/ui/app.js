@@ -37,7 +37,10 @@ const TEXT = {
     claudeMissing: "Claude Desktop is not installed on this computer.",
     claudeCodeNote: "Run this once in a terminal.",
     remoteTitle: "ChatGPT, Claude on the web and your other devices",
-    remoteNote: "Sign in to Tu Hora Vale, or to a zman server of your own, to see your hours on the web, sync this device and get a link any assistant can use.",
+    remoteNote: "Connect this computer to your Tu Hora Vale account to see your hours on the web, sync this device and get a link any assistant can use. You confirm it in your browser: no password is typed here.",
+    pairStart: "Connect to Tu Hora Vale", pairWait: (code) => `Confirm in your browser. Code: ${code}`,
+    pairHelp: "A page opened in your browser: sign in to your account and press Connect. If it did not open, copy this address.",
+    pairCancel: "Cancel", manualSignIn: "Use email and password, or a zman server of your own",
     server: "Server", email: "Email", password: "Password",
     signIn: "Sign in", createAccount: "Create account", signOut: "Sign out", syncNow: "Sync now",
     signedIn: (email, when) => `Signed in as ${email} · last sync ${when}`,
@@ -119,7 +122,10 @@ const TEXT = {
     claudeMissing: "Claude Desktop no está instalado en esta computadora.",
     claudeCodeNote: "Ejecutá esto una vez en una terminal.",
     remoteTitle: "ChatGPT, Claude en la web y tus otros dispositivos",
-    remoteNote: "Iniciá sesión en Tu Hora Vale, o en un servidor zman propio, para ver tus horas en la web, sincronizar este dispositivo y obtener un enlace que sirve en cualquier asistente.",
+    remoteNote: "Conectá esta computadora a tu cuenta de Tu Hora Vale para ver tus horas en la web, sincronizar este dispositivo y obtener un enlace que sirve en cualquier asistente. Lo confirmás en el navegador: acá no se escribe ninguna contraseña.",
+    pairStart: "Conectar con Tu Hora Vale", pairWait: (code) => `Confirmá en el navegador. Código: ${code}`,
+    pairHelp: "Se abrió una página en tu navegador: entrá a tu cuenta y tocá Conectar. Si no se abrió, copiá esta dirección.",
+    pairCancel: "Cancelar", manualSignIn: "Usar email y contraseña, o un servidor zman propio",
     server: "Servidor", email: "Email", password: "Contraseña",
     signIn: "Iniciar sesión", createAccount: "Crear cuenta", signOut: "Cerrar sesión", syncNow: "Sincronizar ahora",
     signedIn: (email, when) => `Sesión iniciada como ${email} · último sync ${when}`,
@@ -507,7 +513,7 @@ function renderConnections(c) {
   $("claude-note").textContent = !claude.installed ? t.claudeMissing : claude.connected ? t.claudeDone : t.claudeReady;
   $("claude-code-command").textContent = c.claude_code_command;
 
-  $("sync-form").hidden = Boolean(c.sync);
+  $("sync-connect").hidden = Boolean(c.sync);
   $("sync-account").hidden = !c.sync;
   if (c.sync) {
     const when = c.sync.last_sync_ms
@@ -555,6 +561,59 @@ $("sync-form").addEventListener("submit", (event) => {
   };
   connectionCommand("sync_login", args, event.submitter).then(() => { $("sync-password").value = ""; });
 });
+// Connecting through the browser: the app shows a short code, opens the page
+// where the user approves it, and asks every few seconds whether they did.
+let pairTimer = null;
+function stopPairing() {
+  clearInterval(pairTimer);
+  pairTimer = null;
+  $("pair-wait").hidden = true;
+  $("pair-start").hidden = false;
+}
+function pairingFailed(problem) {
+  stopPairing();
+  $("connect-error").textContent = String(problem);
+  $("connect-error").hidden = false;
+}
+$("pair-start").addEventListener("click", async () => {
+  const button = $("pair-start");
+  $("connect-error").hidden = true;
+  button.disabled = true;
+  try {
+    const pairing = await invoke("pair_start", { server: $("sync-server").value });
+    $("pair-note").textContent = t.pairWait(pairing.user_code);
+    $("pair-url").textContent = pairing.url;
+    $("pair-wait").hidden = false;
+    button.hidden = true;
+    let asking = false;
+    pairTimer = setInterval(async () => {
+      if (asking) return;
+      asking = true;
+      try {
+        const connections = await invoke("pair_check", {});
+        if (connections && pairTimer) {
+          stopPairing();
+          renderConnections(connections);
+        }
+      } catch (problem) {
+        if (pairTimer) pairingFailed(problem);
+      } finally {
+        asking = false;
+      }
+    }, 2500);
+  } catch (problem) {
+    pairingFailed(problem);
+  } finally {
+    button.disabled = false;
+  }
+});
+async function cancelPairing() {
+  if (!pairTimer) return;
+  stopPairing();
+  await invoke("pair_cancel", {});
+}
+$("pair-cancel").addEventListener("click", cancelPairing);
+dialog.addEventListener("close", cancelPairing);
 $("sync-now").addEventListener("click", (event) => connectionCommand("sync_now", {}, event.currentTarget));
 $("sync-logout").addEventListener("click", (event) => connectionCommand("sync_logout", {}, event.currentTarget));
 

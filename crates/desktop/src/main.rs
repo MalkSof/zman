@@ -44,6 +44,8 @@ struct AppState {
     control: Arc<Control>,
     tracking: Mutex<Tracking>,
     tray: Mutex<Option<TrayItems>>,
+    /// A connection to an account waiting for the user's approval in the browser.
+    pairing: Mutex<Option<sync::Pairing>>,
 }
 
 fn tray_labels(lang: Lang) -> (&'static str, &'static str, &'static str) {
@@ -94,6 +96,7 @@ fn main() {
         control: Arc::new(Control::default()),
         tracking: Mutex::new(Tracking::Starting),
         tray: Mutex::new(None),
+        pairing: Mutex::new(None),
     };
 
     tauri::Builder::default()
@@ -110,6 +113,9 @@ fn main() {
             get_connections,
             set_claude_desktop,
             sync_login,
+            pair_start,
+            pair_check,
+            pair_cancel,
             sync_logout,
             sync_now,
             get_settings,
@@ -551,6 +557,59 @@ fn sync_login(state: State<'_, AppState>, server: String, email: String, passwor
     let config = Config::load(&state.paths.config_file).map_err(|e| e.to_string())?;
     sync::run(&store, &config)?;
     connections_json(&state)
+}
+
+/// Opens a web page in the user's browser. Only given addresses built by
+/// this app, and only web ones.
+fn open_in_browser(url: &str) -> bool {
+    if !(url.starts_with("https://") || url.starts_with("http://")) {
+        return false;
+    }
+    #[cfg(windows)]
+    let child = std::process::Command::new("rundll32").args(["url.dll,FileProtocolHandler", url]).spawn();
+    #[cfg(target_os = "macos")]
+    let child = std::process::Command::new("open").arg(url).spawn();
+    #[cfg(all(unix, not(target_os = "macos")))]
+    let child = std::process::Command::new("xdg-open").arg(url).spawn();
+    child.is_ok()
+}
+
+/// Starts connecting this device to an account through the browser, and
+/// opens the page where the user approves it. No password is typed here.
+#[tauri::command(async)]
+fn pair_start(state: State<'_, AppState>, server: String) -> Result<Value, String> {
+    let store = Store::open(&state.paths.db_file).map_err(|e| e.to_string())?;
+    let english = *state.lang.lock().unwrap() == Lang::En;
+    let pairing = sync::pair_start(&store, &server, english)?;
+    let reply = json!({ "user_code": pairing.user_code, "url": pairing.url, "opened": open_in_browser(&pairing.url) });
+    *state.pairing.lock().unwrap() = Some(pairing);
+    Ok(reply)
+}
+
+/// Asks whether the user approved in the browser: `null` while they have
+/// not, the connections once this device is signed in and synced.
+#[tauri::command(async)]
+fn pair_check(state: State<'_, AppState>) -> Result<Value, String> {
+    let Some(pairing) = state.pairing.lock().unwrap().clone() else {
+        return Err("no connection is waiting".into());
+    };
+    let store = Store::open(&state.paths.db_file).map_err(|e| e.to_string())?;
+    match sync::pair_finish(&store, &pairing) {
+        Ok(None) => return Ok(Value::Null),
+        Ok(Some(_)) => *state.pairing.lock().unwrap() = None,
+        Err(problem) => {
+            *state.pairing.lock().unwrap() = None;
+            return Err(problem);
+        }
+    }
+    let config = Config::load(&state.paths.config_file).map_err(|e| e.to_string())?;
+    sync::run(&store, &config)?;
+    connections_json(&state)
+}
+
+#[tauri::command]
+fn pair_cancel(state: State<'_, AppState>) {
+    *state.pairing.lock().unwrap() = None;
 }
 
 #[tauri::command(async)]

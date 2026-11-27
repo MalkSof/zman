@@ -131,19 +131,74 @@ pub fn login(store: &Store, server: &str, email: &str, password: &str, register:
     });
     let reply = call("POST", &format!("{server}/api/login"), None, &body)?;
     let token = reply.get("token").and_then(Value::as_str).ok_or("the server did not return a token")?;
-    let email = reply.get("email").and_then(Value::as_str).unwrap_or(email).to_string();
+    let email = reply.get("email").and_then(Value::as_str).unwrap_or(email);
+    remember(store, &server, email, token)
+}
 
+/// Keeps the account this device just signed in to.
+fn remember(store: &Store, server: &str, email: &str, token: &str) -> Result<Account, String> {
     let previous = store.meta_get(KEY_SERVER).map_err(text)?;
-    store.meta_set(KEY_SERVER, &server).map_err(text)?;
-    store.meta_set(KEY_EMAIL, &email).map_err(text)?;
+    store.meta_set(KEY_SERVER, server).map_err(text)?;
+    store.meta_set(KEY_EMAIL, email).map_err(text)?;
     store.meta_set(KEY_TOKEN, token).map_err(text)?;
     // A different server has none of our events yet: start over.
-    if previous.as_deref() != Some(server.as_str()) {
+    if previous.as_deref() != Some(server) {
         store.meta_delete(KEY_CURSOR_MS).map_err(text)?;
         store.meta_delete(KEY_CURSOR_ID).map_err(text)?;
         store.meta_delete(KEY_LAST_SYNC).map_err(text)?;
     }
-    Ok(Account { server, email, token: token.to_string() })
+    Ok(Account { server: server.to_string(), email: email.to_string(), token: token.to_string() })
+}
+
+/// A connection to an account, waiting for the user to approve it in the
+/// browser.
+#[derive(Debug, Clone, PartialEq)]
+pub struct Pairing {
+    pub server: String,
+    /// The short code the user sees here and in the browser.
+    pub user_code: String,
+    /// The page where they approve it.
+    pub url: String,
+    /// What this device proves itself with when it asks for the answer.
+    code: String,
+}
+
+/// Starts connecting this device through the browser, on servers that have
+/// accounts with a web page (Tu Hora Vale). The user approves a short code
+/// on a page where they are signed in: no password is typed into the app.
+pub fn pair_start(store: &Store, server: &str, english: bool) -> Result<Pairing, String> {
+    let server = normalize_server(server)?;
+    let body = json!({ "device_id": store.device_id().map_err(text)?, "device_name": device_name() });
+    let reply = call("POST", &format!("{server}/api/pair/start"), None, &body).map_err(|problem| {
+        if problem.ends_with("(HTTP 404)") || problem.ends_with("(HTTP 405)") {
+            "this server does not connect through the browser: sign in with your email and password".to_string()
+        } else {
+            problem
+        }
+    })?;
+    let field = |name: &str| reply.get(name).and_then(Value::as_str).map(str::to_string);
+    let (Some(code), Some(user_code)) = (field("code"), field("user_code")) else {
+        return Err("the server did not start the connection".into());
+    };
+    // The page is opened in the browser, so its address is built here, with
+    // a code that can only be letters, digits and dashes.
+    let plain = (1..=16).contains(&user_code.len()) && user_code.chars().all(|c| c.is_ascii_alphanumeric() || c == '-');
+    if !plain {
+        return Err("the server sent a code that is not valid".into());
+    }
+    let url = format!("{server}/pair?code={user_code}{}", if english { "&lang=en" } else { "" });
+    Ok(Pairing { server, user_code, url, code })
+}
+
+/// Asks the server whether the user approved. `None` while they have not;
+/// once they have, this device is signed in.
+pub fn pair_finish(store: &Store, pairing: &Pairing) -> Result<Option<Account>, String> {
+    let reply = call("POST", &format!("{}/api/pair/claim", pairing.server), None, &json!({ "code": pairing.code }))?;
+    let Some(token) = reply.get("token").and_then(Value::as_str) else {
+        return Ok(None);
+    };
+    let email = reply.get("email").and_then(Value::as_str).unwrap_or_default();
+    remember(store, &pairing.server, email, token).map(Some)
 }
 
 /// Forgets the account on this device and tells the server to drop the token.

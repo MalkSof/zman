@@ -25,7 +25,7 @@ URL = "https://malksof.github.io/zman/"
 if os.path.exists(os.path.join(SRC, "CNAME")):
     URL = "https://%s/" % io.open(os.path.join(SRC, "CNAME"), encoding="utf-8").read().strip()
 REPO = "https://github.com/MalkSof/zman"
-VERSION = "0.3.1"
+VERSION = "0.3.2"
 # The hosted service, sold as Tu Hora Vale. With CLOUD_URL empty the plan's
 # button leads to the waitlist instead of the sign-up page.
 CLOUD_URL = "https://app.tuhoravale.com"

@@ -151,6 +151,18 @@
         <div><h3 data-i18n="remoteTitle"></h3><p data-i18n="remoteNote"></p></div>
       </div>
 
+      <div id="sync-connect">
+        <div class="form-actions">
+          <button class="primary-btn" type="button" id="pair-start" data-i18n="pairStart"></button>
+        </div>
+        <div id="pair-wait" hidden>
+          <p class="conn-ok" id="pair-note"></p>
+          <p data-i18n="pairHelp"></p>
+          <div class="copy-row"><code id="pair-url"></code><button class="ghost-btn" type="button" data-copy="pair-url" data-i18n="copy"></button></div>
+          <div class="form-actions"><button class="ghost-btn" type="button" id="pair-cancel" data-i18n="pairCancel"></button></div>
+        </div>
+        <details class="manual">
+          <summary data-i18n="manualSignIn"></summary>
       <form id="sync-form" autocomplete="on">
         <label><span data-i18n="server"></span><input id="sync-server" type="text" value="https://app.tuhoravale.com" placeholder="https://app.tuhoravale.com" required></label>
         <div class="form-pair">
@@ -162,6 +174,8 @@
           <button class="ghost-btn" type="submit" data-register="true" data-i18n="createAccount"></button>
         </div>
       </form>
+        </details>
+      </div>
 
       <div id="sync-account" hidden>
         <p class="conn-ok" id="sync-summary"></p>
