@@ -4,19 +4,19 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="robots" content="noindex">
-  <title>zman</title>
+  <title>Tu Hora Vale</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
   <header class="topbar">
-    <div class="brand" aria-label="zman">
+    <div class="brand" aria-label="Tu Hora Vale">
       <svg viewBox="0 0 32 32" width="26" height="26" aria-hidden="true">
         <rect x="1" y="1" width="30" height="30" rx="7" class="brand-bg"/>
         <circle cx="16" cy="16" r="8.5" fill="none" stroke-width="3" class="brand-track"/>
         <path d="M16 7.5a8.5 8.5 0 1 1-7.36 12.75" fill="none" stroke-width="3" stroke-linecap="round" class="brand-arc"/>
         <circle cx="16" cy="16" r="2.3" class="brand-dot"/>
       </svg>
-      <span>zman</span>
+      <span>Tu Hora Vale</span>
     </div>
 
     <div class="segmented" role="tablist" id="period-switch">
@@ -152,8 +152,20 @@
         <div><h3 data-i18n="remoteTitle"></h3><p data-i18n="remoteNote"></p></div>
       </div>
 
+      <div id="sync-connect">
+        <div class="form-actions">
+          <button class="primary-btn" type="button" id="pair-start" data-i18n="pairStart"></button>
+        </div>
+        <div id="pair-wait" hidden>
+          <p class="conn-ok" id="pair-note"></p>
+          <p data-i18n="pairHelp"></p>
+          <div class="copy-row"><code id="pair-url"></code><button class="ghost-btn" type="button" data-copy="pair-url" data-i18n="copy"></button></div>
+          <div class="form-actions"><button class="ghost-btn" type="button" id="pair-cancel" data-i18n="pairCancel"></button></div>
+        </div>
+        <details class="manual">
+          <summary data-i18n="manualSignIn"></summary>
       <form id="sync-form" autocomplete="on">
-        <label><span data-i18n="server"></span><input id="sync-server" type="text" placeholder="https://zman.example.com" required></label>
+        <label><span data-i18n="server"></span><input id="sync-server" type="text" value="https://app.tuhoravale.com" placeholder="https://app.tuhoravale.com" required></label>
         <div class="form-pair">
           <label><span data-i18n="email"></span><input id="sync-email" type="email" autocomplete="username" required></label>
           <label><span data-i18n="password"></span><input id="sync-password" type="password" autocomplete="current-password" minlength="8" required></label>
@@ -163,6 +175,8 @@
           <button class="ghost-btn" type="submit" data-register="true" data-i18n="createAccount"></button>
         </div>
       </form>
+        </details>
+      </div>
 
       <div id="sync-account" hidden>
         <p class="conn-ok" id="sync-summary"></p>

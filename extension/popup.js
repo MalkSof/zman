@@ -4,18 +4,18 @@ const DEFAULT_PORT = 27184;
 const spanish = (navigator.language || "").toLowerCase().startsWith("es");
 const t = spanish
   ? {
-      on: "Conectado a zman",
-      off: "zman no está corriendo",
+      on: "Conectado a Tu Hora Vale",
+      off: "Tu Hora Vale no está corriendo",
       onHint: "El sitio de la pestaña activa se suma a tu registro. Las ventanas privadas nunca se informan.",
-      offHint: "Abrí la app de zman (o iniciá zman-daemon) en esta computadora.",
+      offHint: "Abrí la app de Tu Hora Vale en esta computadora.",
       advanced: "Avanzado",
       port: "Puerto local",
     }
   : {
-      on: "Connected to zman",
-      off: "zman is not running",
+      on: "Connected to Tu Hora Vale",
+      off: "Tu Hora Vale is not running",
       onHint: "The active tab's site is added to your tracking. Private windows are never reported.",
-      offHint: "Open the zman app (or start zman-daemon) on this computer.",
+      offHint: "Open the Tu Hora Vale app on this computer.",
       advanced: "Advanced",
       port: "Local port",
     };

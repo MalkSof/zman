@@ -25,7 +25,7 @@ URL = "https://malksof.github.io/zman/"
 if os.path.exists(os.path.join(SRC, "CNAME")):
     URL = "https://%s/" % io.open(os.path.join(SRC, "CNAME"), encoding="utf-8").read().strip()
 REPO = "https://github.com/MalkSof/zman"
-VERSION = "0.3.2"
+VERSION = "0.4.0"
 # The hosted service, sold as Tu Hora Vale. With CLOUD_URL empty the plan's
 # button leads to the waitlist instead of the sign-up page.
 CLOUD_URL = "https://app.tuhoravale.com"
@@ -112,6 +112,8 @@ BRAND = "zman"
 # Exact pieces of text to change on every page written, and sections to drop.
 REPLACE = []
 DROP = []
+# A pattern for the name of the app where the site calls it something else.
+RENAME = None
 # Where the Spanish home page really lives, when it is not this site.
 HOME_CANONICAL = {"es": "https://tuhoravale.com/"}
 
@@ -134,7 +136,7 @@ if os.environ.get("SITE") == "tuhoravale":
     keep = {q: a for q, a in page["faq"]}
     page["faq"] = [
         ("¿Tu Hora Vale es gratis?",
-         "La app de escritorio, que se llama zman, es gratis y open source: la descargás y funciona sin cuenta, con las horas por cliente "
+         "La app de escritorio es gratis y open source: la descargás y funciona sin cuenta, con las horas por cliente "
          "y tu tarifa por hora incluidas. El plan Freelancer suma el panel web, el celular y varias computadoras: cuesta $%s por mes, "
          "con %d días de prueba sin tarjeta." % (PRICE_ARS, TRIAL_DAYS)),
         ("¿Cómo sabe para qué cliente estoy trabajando?", keep["¿Cómo sabe para qué cliente estoy trabajando?"]),
@@ -161,8 +163,12 @@ if os.environ.get("SITE") == "tuhoravale":
         ("Datos, guías y comparativas sobre tiempo, foco y trabajo con IA.", "Guías para freelancers: cuánto cobrar, qué cliente conviene y cómo medir tus horas."),
         ("zman registra solo en qué trabajás, lo separa por cliente", "Tu Hora Vale registra solo en qué trabajás, lo separa por cliente"),
         ("Tu Hora Vale, nuestro servicio en la nube, le suma la web", "El plan Freelancer le suma la web"),
-        ("<h2>Instalalo en un minuto</h2>", "<h2>Instalá zman, la app de Tu Hora Vale</h2>"),
+        ("<h2>Instalalo en un minuto</h2>", "<h2>Instalá Tu Hora Vale en un minuto</h2>"),
+        ("Levantá tu propio servidor zman", "Levantá tu propio servidor, que es open source,"),
     ]
+    # The app is called Tu Hora Vale; zman is only the name of its source
+    # code. What stays: addresses, and the commands of the terminal tool.
+    RENAME = re.compile(r"(?<![\w/.@+%-])zman(?![\w/+-])(?!\.\w)(?! (?:today|week|export|status|daemon)\b)")
     # Services to order for companies and families belong to the other site.
     DROP = [r'\n    <section id="services" class="services">.*?</section>\n']
 used = {old: 0 for old, _ in REPLACE}
@@ -252,6 +258,8 @@ def write(path, text):
             text = text.replace(old, new)
         for pattern in DROP:
             text = re.sub(pattern, "\n", text, flags=re.S)
+        if RENAME:
+            text = RENAME.sub(BRAND, text)
         if len(PAGES) == 1:
             # One language: nothing to switch to.
             text = re.sub(r'<span class="lang-toggle".*?</span>', "", text, flags=re.S)

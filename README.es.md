@@ -41,7 +41,7 @@ Sitio web y demo en vivo: https://zman.malkadigital.com/
 
 ## Inicio rápido
 
-**Instalador para Windows**: descargá `zman_x.y.z_x64-setup.exe` de la
+**Instalador para Windows**: descargá `TuHoraVale_x.y.z_x64-setup.exe` de la
 [última versión](https://github.com/MalkSof/zman/releases/latest) y ejecutalo.
 El instalador todavía no está firmado, así que Windows SmartScreen te va a
 pedir confirmación ("Más información" → "Ejecutar de todas formas").
@@ -143,7 +143,7 @@ la pestaña exacta, y es la que tapa una página bloqueada.
 3. **Cargar descomprimida** y elegí la carpeta `extension/`.
 
 La extensión solo habla con zman en `127.0.0.1`. Su popup muestra si zman está
-corriendo. En la página de versiones está como `zman-extension.zip`.
+corriendo. En la página de versiones está como `TuHoraVale-extension.zip`.
 
 ## Configuración
 

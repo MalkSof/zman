@@ -1,7 +1,8 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "productName": "zman",
-  "version": "0.3.2",
+  "productName": "Tu Hora Vale",
+  "mainBinaryName": "tuhoravale",
+  "version": "0.4.0",
   "identifier": "dev.zman.app",
   "build": {
     "frontendDist": "ui"
@@ -11,7 +12,7 @@
     "windows": [
       {
         "label": "main",
-        "title": "zman",
+        "title": "Tu Hora Vale",
         "width": 1180,
         "height": 800,
         "minWidth": 720,
@@ -26,6 +27,14 @@
   "bundle": {
     "active": true,
     "targets": ["nsis"],
-    "icon": ["icons/32x32.png", "icons/128x128.png", "icons/icon.ico"]
+    "publisher": "MalkaDigital",
+    "homepage": "https://tuhoravale.com",
+    "shortDescription": "Sabé cuánto ganás por hora con cada cliente",
+    "icon": ["icons/32x32.png", "icons/128x128.png", "icons/icon.ico"],
+    "windows": {
+      "nsis": {
+        "installerHooks": "windows/hooks.nsh"
+      }
+    }
   }
 }

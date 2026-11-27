@@ -16,10 +16,10 @@ const t = spanish
         focus: `${site} vuelve cuando termine la sesión, a las ${clock(until)}.`,
         schedule: `Los sitios que distraen están bloqueados hasta las ${clock(until)}.`,
         limit: `Ya usaste los ${limit} minutos de hoy. ${site} vuelve mañana.`,
-        site: `Le pediste a zman que bloquee ${site}.`,
+        site: `Le pediste a Tu Hora Vale que bloquee ${site}.`,
       },
       retry: "Probar de nuevo",
-      footer: "Bloqueado por zman. Se cambia desde la app, en Foco.",
+      footer: "Bloqueado por Tu Hora Vale. Se cambia desde la app, en Foco.",
     }
   : {
       title: { focus: "You are in focus mode", schedule: "Focus hours", limit: "Today's time is up", site: "Site blocked" },
@@ -27,14 +27,14 @@ const t = spanish
         focus: `${site} comes back when the session ends, at ${clock(until)}.`,
         schedule: `Distracting sites are blocked until ${clock(until)}.`,
         limit: `You have used today's ${limit} minutes. ${site} comes back tomorrow.`,
-        site: `You asked zman to block ${site}.`,
+        site: `You asked Tu Hora Vale to block ${site}.`,
       },
       retry: "Try again",
-      footer: "Blocked by zman. Change it in the app, under Focus.",
+      footer: "Blocked by Tu Hora Vale. Change it in the app, under Focus.",
     };
 
 const $ = (id) => document.getElementById(id);
-document.title = `${t.title[reason] || t.title.site} · zman`;
+document.title = `${t.title[reason] || t.title.site} · Tu Hora Vale`;
 $("title").textContent = t.title[reason] || t.title.site;
 $("text").textContent = t.text[reason] || t.text.site;
 $("retry").textContent = t.retry;

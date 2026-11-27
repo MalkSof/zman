@@ -50,7 +50,7 @@ struct AppState {
 
 fn tray_labels(lang: Lang) -> (&'static str, &'static str, &'static str) {
     (
-        lang.pick("Open zman", "Abrir zman"),
+        lang.pick("Open Tu Hora Vale", "Abrir Tu Hora Vale"),
         lang.pick("Pause tracking", "Pausar el registro"),
         lang.pick("Quit", "Salir"),
     )
@@ -127,6 +127,13 @@ fn main() {
             save_clients
         ])
         .setup(|app| {
+            // The app used to be called zman: Claude Desktop may still point
+            // to where it was installed.
+            if let (Some(path), Ok(exe)) = (connections::claude_config_path(), own_exe()) {
+                if let Err(e) = connections::adopt_old_entry(&path, &exe) {
+                    eprintln!("zman: {e}");
+                }
+            }
             build_tray(app.handle())?;
             start_tracking(app.handle().clone());
             nudges::start(app.handle().clone());
@@ -143,7 +150,7 @@ fn main() {
             }
         })
         .run(tauri::generate_context!())
-        .expect("failed to start zman");
+        .expect("failed to start Tu Hora Vale");
 }
 
 fn show_window(app: &AppHandle) {
@@ -163,7 +170,7 @@ fn build_tray(app: &AppHandle) -> tauri::Result<()> {
     *app.state::<AppState>().tray.lock().unwrap() = Some(TrayItems { open, pause, quit });
 
     let mut tray = TrayIconBuilder::with_id("main")
-        .tooltip("zman")
+        .tooltip("Tu Hora Vale")
         .menu(&menu)
         .show_menu_on_left_click(false)
         .on_menu_event(|app, event| match event.id().as_ref() {
@@ -455,7 +462,7 @@ fn export_csv(state: State<'_, AppState>, period: String, date: Option<String>) 
     let folder = directories::UserDirs::new()
         .and_then(|dirs| dirs.download_dir().map(std::path::Path::to_path_buf))
         .unwrap_or_else(|| state.paths.data_dir.clone());
-    let name = if period == "week" { format!("zman-week-{first}.csv") } else { format!("zman-{first}.csv") };
+    let name = if period == "week" { format!("tuhoravale-semana-{first}.csv") } else { format!("tuhoravale-{first}.csv") };
     let path = folder.join(name);
     // The byte order mark makes Excel read accents correctly.
     let content = format!("\u{feff}{}",zman_core::export::csv(&events, &categories, &tz));
@@ -522,7 +529,7 @@ fn connections_json(state: &AppState) -> Result<Value, String> {
             "installed": claude.is_some(),
             "connected": claude.as_deref().is_some_and(connections::is_connected),
         },
-        "claude_code_command": format!("claude mcp add zman -- \"{exe}\" {}", connections::MCP_FLAG),
+        "claude_code_command": format!("claude mcp add {} -- \"{exe}\" {}", connections::ENTRY, connections::MCP_FLAG),
         "sync": status.account.map(|account| json!({
             "server": account.server,
             "email": account.email,

@@ -30,8 +30,12 @@ jobs:
       - name: Build the command line tool
         run: cargo build --release -p zman-cli
 
+      # "Tu Hora Vale_0.4.0_x64-setup.exe" would be published with dots for spaces.
+      - name: Name the installer
+        run: Get-ChildItem target/release/bundle/nsis/*.exe | Rename-Item -NewName { $_.Name -replace '^.*?_', 'TuHoraVale_' }
+
       - name: Pack the browser extension
-        run: Compress-Archive -Path extension/* -DestinationPath zman-extension.zip
+        run: Compress-Archive -Path extension/* -DestinationPath TuHoraVale-extension.zip
 
       - name: Publish
         uses: softprops/action-gh-release@v2
@@ -40,4 +44,4 @@ jobs:
           files: |
             target/release/bundle/nsis/*.exe
             target/release/zman.exe
-            zman-extension.zip
+            TuHoraVale-extension.zip

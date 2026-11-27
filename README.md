@@ -41,7 +41,7 @@ Website and live demo: https://zman.malkadigital.com/
 
 ## Quick start
 
-**Windows installer**: download `zman_x.y.z_x64-setup.exe` from the
+**Windows installer**: download `TuHoraVale_x.y.z_x64-setup.exe` from the
 [latest release](https://github.com/MalkSof/zman/releases/latest) and run it.
 The installer is not code-signed yet, so Windows SmartScreen will ask you to
 confirm ("More info" → "Run anyway").
@@ -142,7 +142,7 @@ reports the exact tab, and it is what covers a blocked page.
 3. **Load unpacked** and pick the `extension/` folder.
 
 The extension talks only to zman on `127.0.0.1`. Its popup shows whether zman
-is running. The release page has it as `zman-extension.zip`.
+is running. The release page has it as `TuHoraVale-extension.zip`.
 
 ## Configuration
 

@@ -1,4 +1,4 @@
-//! Connecting AI assistants to zman.
+//! Connecting AI assistants to the app.
 //!
 //! Claude Desktop runs local MCP servers listed in its config file; "connect"
 //! here means adding one entry that launches this same app with `--mcp`.
@@ -10,7 +10,10 @@ use serde_json::{Value, json};
 
 /// Flag that makes the app act as a stdio MCP server instead of opening.
 pub const MCP_FLAG: &str = "--mcp";
-const ENTRY: &str = "zman";
+/// The name the app has in Claude's list of servers.
+pub const ENTRY: &str = "tuhoravale";
+/// The name it had while the app was called zman.
+const OLD_ENTRY: &str = "zman";
 
 /// Where Claude Desktop keeps its config, if it is installed.
 pub fn claude_config_path() -> Option<PathBuf> {
@@ -54,7 +57,8 @@ pub fn is_connected(path: &Path) -> bool {
     read_config(path).is_ok_and(|config| config["mcpServers"].get(ENTRY).is_some())
 }
 
-/// The config with the zman entry added or replaced.
+/// The config with the app's entry added or replaced, and without the one
+/// it had under its old name.
 fn with_entry(mut config: Value, command: &str) -> Result<Value, String> {
     if !config.is_object() {
         return Err("Claude's config file has an unexpected shape".into());
@@ -63,20 +67,22 @@ fn with_entry(mut config: Value, command: &str) -> Result<Value, String> {
         config["mcpServers"] = json!({});
     }
     let servers = config["mcpServers"].as_object_mut().ok_or("mcpServers is not an object in Claude's config")?;
+    servers.remove(OLD_ENTRY);
     servers.insert(ENTRY.into(), json!({ "command": command, "args": [MCP_FLAG] }));
     Ok(config)
 }
 
-/// The config with the zman entry removed.
+/// The config with the app's entry removed, under either name.
 fn without_entry(mut config: Value) -> Value {
     if let Some(servers) = config.get_mut("mcpServers").and_then(Value::as_object_mut) {
         servers.remove(ENTRY);
+        servers.remove(OLD_ENTRY);
     }
     config
 }
 
 fn write_config(path: &Path, config: &Value) -> Result<(), String> {
-    // Keep the file as it was before zman first touched it.
+    // Keep the file as it was before the app first touched it.
     let backup = path.with_extension("json.before-zman");
     if path.exists() && !backup.exists() {
         std::fs::copy(path, &backup).map_err(|e| e.to_string())?;
@@ -93,6 +99,17 @@ pub fn disconnect(path: &Path) -> Result<(), String> {
     write_config(path, &without_entry(read_config(path)?))
 }
 
+/// Someone who connected Claude Desktop while the app was called zman keeps
+/// it connected: the old entry, which points to where the app used to be,
+/// becomes the new one. Does nothing for everyone else.
+pub fn adopt_old_entry(path: &Path, command: &str) -> Result<(), String> {
+    let config = read_config(path)?;
+    if config["mcpServers"].get(OLD_ENTRY).is_none() {
+        return Ok(());
+    }
+    write_config(path, &with_entry(config, command)?)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -103,20 +120,20 @@ mod tests {
             "theme": "dark",
             "mcpServers": { "other": { "command": "other.exe" } },
         });
-        let updated = with_entry(config, r"C:\Apps\zman-app.exe").unwrap();
+        let updated = with_entry(config, r"C:\Apps\tuhoravale.exe").unwrap();
         assert_eq!(updated["theme"], "dark");
         assert_eq!(updated["mcpServers"]["other"]["command"], "other.exe");
-        assert_eq!(updated["mcpServers"]["zman"], json!({ "command": r"C:\Apps\zman-app.exe", "args": ["--mcp"] }));
+        assert_eq!(updated["mcpServers"]["tuhoravale"], json!({ "command": r"C:\Apps\tuhoravale.exe", "args": ["--mcp"] }));
 
         let removed = without_entry(updated);
-        assert!(removed["mcpServers"].get("zman").is_none());
+        assert!(removed["mcpServers"].get("tuhoravale").is_none());
         assert_eq!(removed["mcpServers"]["other"]["command"], "other.exe");
     }
 
     #[test]
     fn empty_config_gets_the_section() {
-        let updated = with_entry(json!({}), "zman-app").unwrap();
-        assert_eq!(updated["mcpServers"]["zman"]["command"], "zman-app");
+        let updated = with_entry(json!({}), "tuhoravale").unwrap();
+        assert_eq!(updated["mcpServers"]["tuhoravale"]["command"], "tuhoravale");
         assert_eq!(without_entry(json!({})), json!({}));
     }
 
@@ -145,6 +162,30 @@ mod tests {
         std::fs::write(&path, "{ broken").unwrap();
         assert!(connect(&path, "zman-app").is_err());
         assert_eq!(std::fs::read_to_string(&path).unwrap(), "{ broken");
+        std::fs::remove_dir_all(&dir).unwrap();
+    }
+
+    #[test]
+    fn whoever_connected_the_app_under_its_old_name_stays_connected() {
+        let dir = std::env::temp_dir().join(format!("zman-adopt-test-{}", std::process::id()));
+        std::fs::create_dir_all(&dir).unwrap();
+        let path = dir.join("claude_desktop_config.json");
+
+        // Never connected: nothing is written.
+        adopt_old_entry(&path, r"C:\New\tuhoravale.exe").unwrap();
+        assert!(!path.exists());
+        std::fs::write(&path, r#"{"mcpServers":{"other":{"command":"o"}}}"#).unwrap();
+        adopt_old_entry(&path, r"C:\New\tuhoravale.exe").unwrap();
+        assert!(!is_connected(&path));
+
+        // Connected as zman, to a place the app no longer is.
+        std::fs::write(&path, r#"{"mcpServers":{"other":{"command":"o"},"zman":{"command":"C:\\Old\\zman-app.exe","args":["--mcp"]}}}"#).unwrap();
+        assert!(!is_connected(&path));
+        adopt_old_entry(&path, r"C:\New\tuhoravale.exe").unwrap();
+        let config: Value = serde_json::from_str(&std::fs::read_to_string(&path).unwrap()).unwrap();
+        assert_eq!(config["mcpServers"]["tuhoravale"]["command"], r"C:\New\tuhoravale.exe");
+        assert!(config["mcpServers"].get("zman").is_none());
+        assert_eq!(config["mcpServers"]["other"]["command"], "o");
         std::fs::remove_dir_all(&dir).unwrap();
     }
 }

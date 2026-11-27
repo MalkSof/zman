@@ -52,8 +52,8 @@ fn nudge_note(recent: &Summary, lang: Lang) -> Option<Note> {
     Some((
         lang.pick("Time to get back?", "¿Volvemos?").to_string(),
         match lang {
-            Lang::En => format!("{minutes} of the last 30 minutes went to {}. Start a focus session in zman.", top.name),
-            Lang::Es => format!("{minutes} de los últimos 30 minutos se fueron en {}. Iniciá una sesión de foco en zman.", top.name),
+            Lang::En => format!("{minutes} of the last 30 minutes went to {}. Start a focus session in Tu Hora Vale.", top.name),
+            Lang::Es => format!("{minutes} de los últimos 30 minutos se fueron en {}. Iniciá una sesión de foco en Tu Hora Vale.", top.name),
         },
     ))
 }
@@ -68,7 +68,7 @@ fn recap_note(last: &Summary, before: &Summary, lang: Lang) -> Option<Note> {
         (Lang::Es, Some(d)) => format!("{total} registradas, productividad {score}/100 ({d:+} vs. la semana anterior)."),
         (Lang::Es, None) => format!("{total} registradas, productividad {score}/100."),
     };
-    Some((lang.pick("Your week in zman", "Tu semana en zman").to_string(), body))
+    Some((lang.pick("Your week in Tu Hora Vale", "Tu semana en Tu Hora Vale").to_string(), body))
 }
 
 struct Checker {
