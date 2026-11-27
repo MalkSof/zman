@@ -26,13 +26,15 @@ def font(name, size):
     return ImageFont.truetype(FONTS + name, size)
 
 
-for lang, (headline, accent, note) in TEXT.items():
+# One card per language of the zman site, and one for tuhoravale.com.
+CARDS = [(lang, "zman") + text for lang, text in TEXT.items()] + [("tuhoravale", "Tu Hora Vale") + TEXT["es"]]
+for name, brand, headline, accent, note in CARDS:
     image = Image.new("RGB", (W, H), BG)
     draw = ImageDraw.Draw(image)
 
     icon = Image.open(os.path.join(ROOT, "site", "icon.png")).convert("RGBA").resize((64, 64), Image.LANCZOS)
     image.paste(icon, (72, 64), icon)
-    draw.text((152, 66), "zman", font=font("seguisb.ttf", 44), fill=INK)
+    draw.text((152, 66), brand, font=font("seguisb.ttf", 44), fill=INK)
 
     y = 190
     for line in headline:
@@ -55,5 +57,5 @@ for lang, (headline, accent, note) in TEXT.items():
                 height = minutes / 60 * (bottom - top)
                 draw.rectangle((x, base - height, x + bar, base), fill=color)
                 base -= height + 2
-    image.save(os.path.join(ROOT, "site", "og-%s.png" % lang), optimize=True)
+    image.save(os.path.join(ROOT, "site", "og-%s.png" % name), optimize=True)
 print("social cards drawn")

@@ -26,9 +26,9 @@ if os.path.exists(os.path.join(SRC, "CNAME")):
     URL = "https://%s/" % io.open(os.path.join(SRC, "CNAME"), encoding="utf-8").read().strip()
 REPO = "https://github.com/MalkSof/zman"
 VERSION = "0.3.0"
-# zman Cloud. While CLOUD_URL is empty the plan's button leads to the waitlist;
-# put the address of the hosted service here once it is open.
-CLOUD_URL = ""
+# The hosted service, sold as Tu Hora Vale. With CLOUD_URL empty the plan's
+# button leads to the waitlist instead of the sign-up page.
+CLOUD_URL = "https://app.tuhoravale.com"
 PRICE_ARS = "9.900"
 TRIAL_DAYS = 15
 CLOUD = {
@@ -57,7 +57,7 @@ PAGES = {
         "posts_more": "All articles",
         "faq": [
             ("Is zman free?",
-             "The app is free and open source under the MIT license, with no account needed: you download it and it works, including hours per client and your rate per hour. zman Cloud is an optional paid service that adds a web panel, your phone and several computers."),
+             "The app is free and open source under the MIT license, with no account needed: you download it and it works, including hours per client and your rate per hour. Tu Hora Vale is our optional paid service on top of it: it adds a web panel, your phone and several computers."),
             ("How does it know which client I am working for?",
              "You add each client once, with a word that shows up in the window title (usually the project folder your editor or terminal displays), the client's website or an app. From then on zman assigns the time by itself, and it suggests the project folders it saw that have no client yet. You can change the rules at any time."),
             ("How does it compute my rate per hour?",
@@ -86,13 +86,13 @@ PAGES = {
         "posts_more": "Todos los artículos",
         "faq": [
             ("¿zman es gratis?",
-             "La app es gratis y open source, con licencia MIT, y no pide cuenta: la descargás y funciona, con las horas por cliente y tu tarifa por hora incluidas. zman Cloud es un servicio pago opcional que suma el panel web, el celular y varias computadoras."),
+             "La app es gratis y open source, con licencia MIT, y no pide cuenta: la descargás y funciona, con las horas por cliente y tu tarifa por hora incluidas. Tu Hora Vale es nuestro servicio pago opcional arriba de la app: suma el panel web, el celular y varias computadoras."),
             ("¿Cómo sabe para qué cliente estoy trabajando?",
              "Cargás cada cliente una sola vez, con una palabra que aparece en el título de la ventana (casi siempre la carpeta del proyecto que muestran tu editor o tu terminal), el sitio del cliente o una app. Desde ahí zman asigna el tiempo solo, y te sugiere las carpetas de proyecto que vio y todavía no tienen cliente. Las reglas se pueden cambiar cuando quieras."),
             ("¿Cómo calcula mi tarifa por hora?",
              "Cargás lo que te pagó cada cliente, en pesos, dólares o euros, o se lo decís a tu asistente de IA y lo anota. zman divide lo cobrado en el mes por las horas que registró para ese cliente. Tus proyectos propios cuentan horas pero no tienen tarifa."),
             ("¿Puedo facturar en ARCA desde zman?",
-             "Todavía no. Estamos trabajando para que zman Cloud arme la factura de ARCA a partir de las horas del mes. Hoy zman mide las horas y calcula tu tarifa; la factura la seguís haciendo donde la hacés siempre."),
+             "Todavía no. Estamos trabajando para que Tu Hora Vale arme la factura de ARCA a partir de las horas del mes. Hoy zman mide las horas y calcula tu tarifa; la factura la seguís haciendo donde la hacés siempre."),
             ("¿Es una alternativa a RescueTime?",
              "Sí. Igual que RescueTime, zman registra solo las apps y los sitios que usás y te da un puntaje de productividad, categorías y tiempo de foco. La diferencia es que zman es open source y guarda tus datos en un archivo en tu propia computadora, no en la nube de otro."),
             ("¿Cómo funciona con Claude y ChatGPT?",
@@ -107,10 +107,70 @@ PAGES = {
     },
 }
 
+ALL_LANGS = tuple(PAGES)
+BRAND = "zman"
+# Exact pieces of text to change on every page written, and sections to drop.
+REPLACE = []
+DROP = []
+# Where the Spanish home page really lives, when it is not this site.
+HOME_CANONICAL = {"es": "https://tuhoravale.com/"}
+
+# `SITE=tuhoravale python scripts/build_site.py` builds, from these same
+# sources, the site of the hosted product into dist/tuhoravale: Spanish
+# only, under its own name, with the posts written for freelancers.
+if os.environ.get("SITE") == "tuhoravale":
+    BRAND = "Tu Hora Vale"
+    URL = "https://tuhoravale.com/"
+    OUT = os.path.join(ROOT, "dist", "tuhoravale")
+    HOME_CANONICAL = {}
+    page = PAGES["es"]
+    page.update(
+        path="",
+        title="Tu Hora Vale · Sabé cuánto ganás por hora con cada cliente",
+        description="Para freelancers: Tu Hora Vale separa tus horas por cliente sin cronómetros, las cruza con lo que cobrás "
+                    "y te muestra tu tarifa real por hora. App gratis para Windows y panel web con %d días de prueba." % TRIAL_DAYS,
+        card_title="Sabé cuánto ganás por hora con cada cliente.",
+    )
+    keep = {q: a for q, a in page["faq"]}
+    page["faq"] = [
+        ("¿Tu Hora Vale es gratis?",
+         "La app de escritorio, que se llama zman, es gratis y open source: la descargás y funciona sin cuenta, con las horas por cliente "
+         "y tu tarifa por hora incluidas. El plan Freelancer suma el panel web, el celular y varias computadoras: cuesta $%s por mes, "
+         "con %d días de prueba sin tarjeta." % (PRICE_ARS, TRIAL_DAYS)),
+        ("¿Cómo sabe para qué cliente estoy trabajando?", keep["¿Cómo sabe para qué cliente estoy trabajando?"]),
+        ("¿Cómo calcula mi tarifa por hora?", keep["¿Cómo calcula mi tarifa por hora?"]),
+        ("¿Puedo facturar en ARCA desde Tu Hora Vale?",
+         "Todavía no. Estamos trabajando para que arme la factura de ARCA a partir de las horas del mes. Hoy mide las horas y calcula "
+         "tu tarifa; la factura la seguís haciendo donde la hacés siempre."),
+        ("¿Qué registra la app? ¿Es privado?", keep["¿Qué registra zman? ¿Es privado?"]),
+        ("¿Cómo funciona con Claude y ChatGPT?",
+         "La app habla MCP, el protocolo que usan los asistentes de IA para conectarse a herramientas. Tocás Conectar y Claude Desktop puede "
+         "responder preguntas como \"¿cuánto gané por hora con este cliente?\" con tus números reales. Con el plan Freelancer también se conectan "
+         "ChatGPT y Claude en la web. Los asistentes solo reciben totales, nunca títulos de ventanas."),
+        ("¿En qué sistemas funciona?", keep["¿En qué sistemas funciona?"]),
+    ]
+    PAGES = {"es": page}
+    blog.only("es", URL)
+    REPLACE = [
+        ('alt="zman" width="28" height="28">zman</a>', 'alt="Tu Hora Vale" width="28" height="28">Tu Hora Vale</a>'),
+        ('<meta property="og:site_name" content="zman">', '<meta property="og:site_name" content="Tu Hora Vale">'),
+        ('"name": "zman"', '"name": "Tu Hora Vale"'),
+        ('title="zman" href=', 'title="Tu Hora Vale" href='),
+        ("<span>zman · ", "<span>Tu Hora Vale · "),
+        ("Blog de zman · registro de tiempo, foco e IA", "Blog de Tu Hora Vale · horas, clientes y cuánto cobrar"),
+        ("Datos, guías y comparativas sobre tiempo, foco y trabajo con IA.", "Guías para freelancers: cuánto cobrar, qué cliente conviene y cómo medir tus horas."),
+        ("zman registra solo en qué trabajás, lo separa por cliente", "Tu Hora Vale registra solo en qué trabajás, lo separa por cliente"),
+        ("Tu Hora Vale, nuestro servicio en la nube, le suma la web", "El plan Freelancer le suma la web"),
+        ("<h2>Instalalo en un minuto</h2>", "<h2>Instalá zman, la app de Tu Hora Vale</h2>"),
+    ]
+    # Services to order for companies and families belong to the other site.
+    DROP = [r'\n    <section id="services" class="services">.*?</section>\n']
+used = {old: 0 for old, _ in REPLACE}
+
 
 def one_language(text, lang):
     """Keeps the spans of `lang` (unwrapped) and drops the other language's."""
-    for other in PAGES:
+    for other in ALL_LANGS:
         if other != lang:
             text = re.sub(r'<span lang="%s">.*?</span>' % other, "", text, flags=re.S)
     return re.sub(r'<span lang="%s">(.*?)</span>' % lang, r"\1", text, flags=re.S)
@@ -125,7 +185,7 @@ def head(lang):
         {
             "@context": "https://schema.org",
             "@type": "SoftwareApplication",
-            "name": "zman",
+            "name": BRAND,
             "description": page["description"],
             "url": url,
             "image": image,
@@ -152,7 +212,7 @@ def head(lang):
     lines = [
         "<title>%s</title>" % esc(page["title"]),
         '<meta name="description" content="%s">' % esc(page["description"]),
-        '<link rel="canonical" href="%s">' % url,
+        '<link rel="canonical" href="%s">' % HOME_CANONICAL.get(lang, url),
     ]
     lines += ['<link rel="alternate" hreflang="%s" href="%s">' % (code, URL + other["path"]) for code, other in PAGES.items()]
     lines += [
@@ -186,11 +246,23 @@ def faq(lang):
 
 
 def write(path, text):
+    if path.endswith((".html", ".xml")):
+        for old, new in REPLACE:
+            used[old] += text.count(old)
+            text = text.replace(old, new)
+        for pattern in DROP:
+            text = re.sub(pattern, "\n", text, flags=re.S)
+        if len(PAGES) == 1:
+            # One language: nothing to switch to.
+            text = re.sub(r'<span class="lang-toggle".*?</span>', "", text, flags=re.S)
+            text = re.sub(r"\n  <script>\s*// Each language has its own page.*?</script>", "", text, flags=re.S)
     os.makedirs(os.path.dirname(path), exist_ok=True)
     with io.open(path, "w", encoding="utf-8", newline="\n") as f:
         f.write(text)
 
 
+if OUT.endswith("tuhoravale"):
+    shutil.rmtree(OUT, ignore_errors=True)
 posts, blog_paths = blog.build(SRC, OUT, URL, write)
 
 
@@ -225,9 +297,14 @@ for lang, page in PAGES.items():
     assert "{{" not in text and 'lang="en">' not in text.split("</head>")[1].replace('hreflang="en">', ""), lang
     write(os.path.join(OUT, page["path"], "index.html"), text)
 
+other_site = BRAND != "zman"
+skip = {"index.html", "CNAME", "og-en.png", "og-es.png"} if other_site else {"index.html", "og-tuhoravale.png"}
 for name in os.listdir(SRC):
-    if name != "index.html" and os.path.isfile(os.path.join(SRC, name)):
-        shutil.copyfile(os.path.join(SRC, name), os.path.join(OUT, name))
+    if name not in skip and os.path.isfile(os.path.join(SRC, name)):
+        shutil.copyfile(os.path.join(SRC, name), os.path.join(OUT, "og-es.png" if name == "og-tuhoravale.png" else name))
+if other_site:
+    # The live demo of the dashboard, built by demo_site.py into docs/demo.
+    shutil.copytree(os.path.join(ROOT, "docs", "demo"), os.path.join(OUT, "demo"), dirs_exist_ok=True)
 
 write(os.path.join(OUT, "sitemap.xml"), '<?xml version="1.0" encoding="UTF-8"?>\n'
       '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">\n'
@@ -247,4 +324,6 @@ write(os.path.join(OUT, "sitemap.xml"), '<?xml version="1.0" encoding="UTF-8"?>\
 # Only read by crawlers when the site sits at the root of its domain.
 write(os.path.join(OUT, "robots.txt"), "User-agent: *\nAllow: /\n\nSitemap: %ssitemap.xml\n" % URL)
 write(os.path.join(OUT, ".nojekyll"), "")
+unused = [old for old, count in used.items() if not count]
+assert not unused, "text to replace was not found: %r" % unused
 print("site built:", ", ".join(URL + page["path"] for page in PAGES.values()))

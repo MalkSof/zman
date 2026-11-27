@@ -1,7 +1,8 @@
 """The blog of the website. Used by build_site.py.
 
 Posts live in site/blog as `<name>.<lang>.html`: a few `key: value` lines
-(title, description, slug, date), a line with `---`, and the article as
+(title, description, slug, date and, optionally, home: the address of the
+site of ours a post belongs to), a line with `---`, and the article as
 HTML. The two languages of a post share `<name>`, which is how each page
 links to its translation.
 """
@@ -28,7 +29,7 @@ PAGE = """<!doctype html>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>{title}</title>
   <meta name="description" content="{description}">
-  <link rel="canonical" href="{url}">
+  <link rel="canonical" href="{canonical}">
 {alternates}
   <meta property="og:type" content="{og_type}">
   <meta property="og:site_name" content="zman">
@@ -72,31 +73,52 @@ PAGE = """<!doctype html>
 """ % (REPO, REPO)
 
 
+# Set by `only`: the address of the site being built, when it carries just
+# the posts that belong to it.
+OWN = None
+
+
+def only(lang, site):
+    """Makes this a single-language blog at the root of `site`, holding only
+    the posts whose header says `home: <site>`."""
+    global OWN
+    OWN = site
+    for code in list(TEXT):
+        if code != lang:
+            del TEXT[code]
+    TEXT[lang]["prefix"] = ""
+
+
 def load(src):
     """All posts as {name: {lang: post}}."""
     posts = {}
     folder = os.path.join(src, "blog")
     for file in sorted(os.listdir(folder)):
         name, lang, _ = file.rsplit(".", 2)
+        if lang not in TEXT:
+            continue
         header, body = io.open(os.path.join(folder, file), encoding="utf-8").read().split("\n---\n", 1)
         post = dict(line.split(": ", 1) for line in header.strip().splitlines())
         post.update(body=body.strip(), lang=lang, name=name, path="%sblog/%s/" % (TEXT[lang]["prefix"], post["slug"]))
+        if OWN and post.get("home") != OWN:
+            continue
         posts.setdefault(name, {})[lang] = post
     return posts
 
 
-def render(lang, path, site, title, description, body, others, og_type="website", structured=None):
-    """One page of the blog. `others` maps each language to the path of this page in it."""
+def render(lang, path, site, title, description, body, others, og_type="website", structured=None, canonical=None):
+    """One page of the blog. `others` maps each language to the path of this page in it.
+    `canonical` is the address search engines should keep, when it is not this page's own."""
     t = TEXT[lang]
     root = "../" * path.count("/")
     esc = lambda value: html.escape(value, quote=True)
     alternates = ['  <link rel="alternate" hreflang="%s" href="%s%s">' % (code, site, other) for code, other in others.items()]
-    alternates.append('  <link rel="alternate" hreflang="x-default" href="%s%s">' % (site, others["en"]))
+    alternates.append('  <link rel="alternate" hreflang="x-default" href="%s%s">' % (site, others.get("en", others[lang])))
     toggle = "".join(
         '<a data-code="%s" hreflang="%s" href="%s%s">%s</a>' % (code, code, root, other, code.upper()) for code, other in others.items()
     )
     return PAGE.format(
-        lang=lang, title=esc(title), description=esc(description), url=site + path, site=site, root=root,
+        lang=lang, title=esc(title), description=esc(description), url=site + path, canonical=canonical or site + path, site=site, root=root,
         prefix=t["prefix"], alternates="\n".join(alternates), og_type=og_type,
         structured="" if structured is None else '  <script type="application/ld+json">%s</script>' % json.dumps(structured, ensure_ascii=False),
         home=root + t["prefix"] if root + t["prefix"] else "./", home_label=t["home"], blog=root + t["prefix"] + "blog/",
@@ -143,8 +165,12 @@ def build(src, out, site, write):
                 "author": {"@type": "Organization", "name": "zman", "url": site},
                 "publisher": {"@type": "Organization", "name": "zman", "logo": {"@type": "ImageObject", "url": site + "icon.png"}},
             }
+            # A post whose home is another site of ours is shown here too, but
+            # search engines are pointed at its home.
+            home_site = post.get("home")
+            canonical = "%sblog/%s/" % (home_site, post["slug"]) if home_site and home_site != site else None
             write(os.path.join(out, post["path"], "index.html"),
-                  render(lang, post["path"], site, post["title"], post["description"], body, others, "article", structured))
+                  render(lang, post["path"], site, post["title"], post["description"], body, others, "article", structured, canonical))
             paths.append((post["path"], others))
             items.append((post["date"], "    <item><title>%s</title><link>%s</link><guid>%s</guid><description>%s</description><pubDate>%s</pubDate></item>" % (
                 html.escape(post["title"]), site + post["path"], site + post["path"], html.escape(post["description"]), post["date"])))
