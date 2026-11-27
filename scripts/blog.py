@@ -13,12 +13,12 @@ TEXT = {
     "en": {"prefix": "", "blog": "Blog", "lead": "Numbers, guides and comparisons about time, focus and working with AI.",
            "title": "zman blog · time tracking, focus and AI", "read": "Read", "home": "Home",
            "cta_title": "See where your own time goes", "cta_text": "zman is a free, open source automatic time tracker for Windows. Your data stays on your computer.",
-           "cta": "Download zman free", "back": "All articles", "footer": "free and open source time tracker",
+           "cta": "Download zman free", "maker": "Made by MalkaDigital · custom websites and software", "back": "All articles", "footer": "free and open source time tracker",
            "date": lambda d: "%s %d, %s" % (["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"][int(d[5:7]) - 1], int(d[8:10]), d[:4])},
     "es": {"prefix": "es/", "blog": "Blog", "lead": "Datos, guías y comparativas sobre tiempo, foco y trabajo con IA.",
            "title": "Blog de zman · registro de tiempo, foco e IA", "read": "Leer", "home": "Inicio",
            "cta_title": "Mirá a dónde se va tu propio tiempo", "cta_text": "zman es un time tracker automático, gratis y open source para Windows. Tus datos quedan en tu computadora.",
-           "cta": "Descargar zman gratis", "back": "Todos los artículos", "footer": "time tracker gratis y open source",
+           "cta": "Descargar zman gratis", "maker": "Hecho por MalkaDigital · sitios y software a medida", "back": "Todos los artículos", "footer": "time tracker gratis y open source",
            "date": lambda d: "%d de %s de %s" % (int(d[8:10]), ["enero", "febrero", "marzo", "abril", "mayo", "junio", "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre"][int(d[5:7]) - 1], d[:4])},
 }
 
@@ -66,6 +66,7 @@ PAGE = """<!doctype html>
   </main>
   <footer>
     <span>zman · {footer} · MIT</span>
+    <a href="https://malkadigital.com/">{maker}</a>
     <a href="%s">github.com/MalkSof/zman</a>
   </footer>
 </body>
@@ -122,7 +123,7 @@ def render(lang, path, site, title, description, body, others, og_type="website"
         prefix=t["prefix"], alternates="\n".join(alternates), og_type=og_type,
         structured="" if structured is None else '  <script type="application/ld+json">%s</script>' % json.dumps(structured, ensure_ascii=False),
         home=root + t["prefix"] if root + t["prefix"] else "./", home_label=t["home"], blog=root + t["prefix"] + "blog/",
-        toggle=toggle, body=body, cta_title=t["cta_title"], cta_text=t["cta_text"], cta=t["cta"], footer=t["footer"],
+        toggle=toggle, body=body, cta_title=t["cta_title"], cta_text=t["cta_text"], cta=t["cta"], footer=t["footer"], maker=t["maker"],
     )
 
 
