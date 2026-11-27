@@ -237,6 +237,35 @@ impl Db {
         }
     }
 
+    /// The users created most recently, newest first, and how many there are
+    /// in all. Ids are ULIDs, so they sort by creation time.
+    pub async fn recent_users(&self, limit: u32) -> DbResult<(Vec<User>, u64)> {
+        match self {
+            Db::Postgres(pool) => {
+                let rows = sqlx::query("SELECT id, email, password_hash, timezone, categories FROM users ORDER BY id DESC LIMIT $1")
+                    .bind(limit as i64)
+                    .fetch_all(pool)
+                    .await
+                    .map_err(db_err)?;
+                let users = rows.iter().map(read_user).collect::<DbResult<Vec<User>>>()?;
+                let total: i64 = sqlx::query("SELECT COUNT(*) AS n FROM users")
+                    .fetch_one(pool)
+                    .await
+                    .map_err(db_err)?
+                    .try_get("n")
+                    .map_err(db_err)?;
+                Ok((users, total as u64))
+            }
+            Db::Memory(memory) => {
+                let memory = memory.lock().unwrap();
+                let mut users = memory.users.clone();
+                users.sort_by(|a, b| b.id.cmp(&a.id));
+                users.truncate(limit as usize);
+                Ok((users, memory.users.len() as u64))
+            }
+        }
+    }
+
     pub async fn update_settings(&self, user_id: &str, timezone: Option<&str>, categories: Option<&str>) -> DbResult<()> {
         match self {
             Db::Postgres(pool) => {

@@ -130,6 +130,19 @@ async fn mcp_call(app: &Router, token: &str, tool: &str, args: Value) -> Value {
 }
 
 #[tokio::test]
+async fn users_are_listed_newest_first() {
+    let db = crate::db::Db::memory();
+    for email in ["a@example.com", "b@example.com", "c@example.com"] {
+        db.create_user(email, "hash", 1).await.unwrap().unwrap();
+        // Ids only sort by time across milliseconds.
+        std::thread::sleep(std::time::Duration::from_millis(3));
+    }
+    let (users, total) = db.recent_users(2).await.unwrap();
+    assert_eq!(total, 3);
+    assert_eq!(users.iter().map(|u| u.email.as_str()).collect::<Vec<_>>(), ["c@example.com", "b@example.com"]);
+}
+
+#[tokio::test]
 async fn accounts_and_login() {
     let app = server(true);
     let credentials = json!({ "email": " Ana@Example.com ", "password": "correct horse" });
